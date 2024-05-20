@@ -1,0 +1,21 @@
+[package]
+name = "discord-bot-rs"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+async-openai = "0.21.0"
+chrono = "0.4.38"
+chrono-tz = "0.9.0"
+dotenv = "0.15.0"
+serenity = { version = "0.12.1", features = [
+    "client",
+    "framework",
+    "standard_framework",
+    "http",
+    "model",
+] }
+tiktoken-rs = { version = "0.5.8", features = ["async-openai"] }
+tokio = { version = "1.37.0", features = ["full", "rt-multi-thread"] }
+serde = { version = "1.0.202", features = ["derive"] }
+serde_json = "1.0.117"
