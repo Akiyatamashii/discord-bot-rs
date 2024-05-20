@@ -52,6 +52,17 @@ impl EventHandler for Handler {
 
     async fn interaction_create(&self, ctx: Context, interaction: Interaction) {
         if let Interaction::Command(command) = interaction {
+            if let Some(permissions) = command.member.clone().unwrap().permissions {
+                if !permissions.administrator() {
+                    let data = CreateInteractionResponseMessage::new()
+                        .content("你沒有權限使用指令")
+                        .ephemeral(true);
+                    let builder = CreateInteractionResponse::Message(data);
+                    if let Err(err) = command.create_response(&ctx.http, builder).await {
+                        println!("Cannot respond to slash command: {err}");
+                    }
+                }
+            }
             println!("Received command interaction: {}", command.data.name);
             let content = match command.data.name.as_str() {
                 "ping" => Some(commands::ping::run(&command.data.options())),
