@@ -25,14 +25,14 @@ pub async fn run<'a>(
     if let Some(index_option) = index_option {
         if let ResolvedValue::Integer(index) = index_option.value {
             let mut reminders_lock = reminders.write().await;
-
+            let index = index - 1;
             if let Some(reminder_list) = reminders_lock.get_mut(&channel_id) {
                 if (index as usize) < reminder_list.len() {
-                    reminder_list.remove((index - 1) as usize);
+                    reminder_list.remove(index as usize);
                     save_reminders_to_file(&*reminders_lock)?;
-                    return Ok(format!("提醒索引 '{}' 已移除", index));
+                    return Ok(format!("提醒索引 '{}' 已移除", index + 1));
                 } else {
-                    return Ok(format!("索引 '{}' 無效", index));
+                    return Ok(format!("索引 '{}' 無效", index + 1));
                 }
             } else {
                 return Ok("該頻道沒有設置任何提醒".to_string());

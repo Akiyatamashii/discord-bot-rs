@@ -4,7 +4,8 @@ use dotenv::dotenv;
 use serde::{Deserialize, Serialize};
 use serenity::{
     all::{
-        ActivityData, ChannelId, CreateInteractionResponse, CreateInteractionResponseMessage, GuildId, Http, Interaction
+        ActivityData, ChannelId, CreateInteractionResponse, CreateInteractionResponseMessage,
+        GuildId, Http, Interaction,
     },
     async_trait,
     model::{channel::Message, gateway::Ready},
@@ -45,8 +46,6 @@ impl EventHandler for Handler {
         if msg.author.bot {
             return;
         }
-
-        println!("get message:{}", msg.content);
     }
 
     async fn interaction_create(&self, ctx: Context, interaction: Interaction) {
