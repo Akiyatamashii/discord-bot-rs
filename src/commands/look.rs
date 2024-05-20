@@ -26,11 +26,15 @@ fn format_reminders(reminders: HashMap<ChannelId, Vec<Reminder>>) -> String {
     let mut output = String::new();
     for (channel_id, reminder_list) in reminders {
         output.push_str(&format!("V 頻道 ID: {} V\n", channel_id));
-        for (index, reminder) in reminder_list.iter().enumerate() {
-            output.push_str(&format!(
-                "{}. 週期: {:?}, 時間: {}, 訊息: {}\n",
-                index, reminder.weekdays, reminder.time, reminder.message
-            ));
+        if !reminder_list.is_empty() {
+            for (index, reminder) in reminder_list.iter().enumerate() {
+                output.push_str(&format!(
+                    "{}. 週期: {:?}, 時間: {}, 訊息: {}\n",
+                    index, reminder.weekdays, reminder.time, reminder.message
+                ));
+            }
+        }else {
+            output.push_str(">>尚無提醒")
         }
         output.push_str("\n");
     }
