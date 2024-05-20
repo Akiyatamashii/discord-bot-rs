@@ -55,6 +55,20 @@ impl EventHandler for Handler {
             println!("Received command interaction: {}", command.data.name);
             let content = match command.data.name.as_str() {
                 "ping" => Some(commands::ping::run(&command.data.options())),
+                "look" => Some(commands::look::run()),
+                "rm_remind" => {
+                    let channel_id = command.channel_id;
+                    match commands::rm_remind::run(
+                        &command.data.options(),
+                        self.reminders.clone(),
+                        channel_id,
+                    )
+                    .await
+                    {
+                        Ok(msg) => Some(msg),
+                        Err(err) => Some(format!("Failed to set reminder: {}", err)),
+                    }
+                }
                 "remind" => {
                     let channel_id = command.channel_id;
                     match commands::remind::run(
@@ -97,7 +111,12 @@ impl EventHandler for Handler {
         let command = guild_id
             .set_commands(
                 &ctx,
-                vec![commands::ping::register(), commands::remind::register()],
+                vec![
+                    commands::ping::register(),
+                    commands::remind::register(),
+                    commands::look::register(),
+                    commands::rm_remind::register(),
+                ],
             )
             .await;
         match command {

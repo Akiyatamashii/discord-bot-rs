@@ -91,21 +91,25 @@ pub async fn run<'a>(
 
 pub fn register() -> CreateCommand {
     CreateCommand::new("remind")
-        .description("Set a reminder")
+        .description("設置提醒")
         .add_option(
             CreateCommandOption::new(
                 CommandOptionType::String,
                 "weekdays",
-                "Days of the week (comma-separated, e.g., 1,2,3)",
+                "日期：需要提醒的日期，以 \"1,4,7\" 格式表示",
             )
             .required(true),
         )
         .add_option(
-            CreateCommandOption::new(CommandOptionType::String, "time", "Time in HH:MM format")
-                .required(true),
+            CreateCommandOption::new(
+                CommandOptionType::String,
+                "time",
+                "時間：提醒時間，以 \"HH:MM\" 格式表示",
+            )
+            .required(true),
         )
         .add_option(
-            CreateCommandOption::new(CommandOptionType::String, "message", "Reminder message")
+            CreateCommandOption::new(CommandOptionType::String, "message", "提醒訊息")
                 .required(true),
         )
 }
