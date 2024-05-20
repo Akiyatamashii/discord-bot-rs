@@ -4,8 +4,7 @@ use dotenv::dotenv;
 use serde::{Deserialize, Serialize};
 use serenity::{
     all::{
-        ChannelId, CreateInteractionResponse, CreateInteractionResponseMessage, GuildId, Http,
-        Interaction,
+        ActivityData, ChannelId, CreateInteractionResponse, CreateInteractionResponseMessage, GuildId, Http, Interaction
     },
     async_trait,
     model::{channel::Message, gateway::Ready},
@@ -111,6 +110,7 @@ impl EventHandler for Handler {
     }
 
     async fn ready(&self, ctx: Context, ready: Ready) {
+        ctx.set_activity(Some(ActivityData::playing("記憶大賽....")));
         println!("{} is online", ready.user.name);
         let guild_id = GuildId::new(
             env::var("GUILD_ID")
