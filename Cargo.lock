@@ -566,7 +566,7 @@ dependencies = [
 
 [[package]]
 name = "discord-bot-rs"
-version = "0.1.0"
+version = "0.5.0"
 dependencies = [
  "async-openai 0.21.0",
  "chrono",
