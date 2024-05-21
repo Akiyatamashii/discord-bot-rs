@@ -88,6 +88,8 @@ pub async fn run<'a>(
             last_executed: None,
         });
 
+    println!("已設定每週提醒");
+
     save_reminders_to_file(&*reminders).expect("Failed to save reminders");
 
     Ok("已設定每週提醒".to_string())

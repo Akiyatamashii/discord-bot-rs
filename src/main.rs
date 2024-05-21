@@ -18,7 +18,7 @@ use modules::func::{
     check_permission, error_output, interaction_response, load_reminders_from_file, system_output,
 };
 
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 struct Reminder {
     //提醒器結構
     weekdays: Vec<Weekday>,           //天數
@@ -120,12 +120,12 @@ impl EventHandler for Handler {
                         &command.data.options(),
                         self.reminders.clone(),
                         channel_id,
+                        
                     )
                     .await
                     {
                         Ok(msg) => {
                             interaction_response(&ctx, &command, msg, false).await;
-                            self.trigger_notify.notify_one();
                             true
                         }
                         Err(err) => {
@@ -146,12 +146,6 @@ impl EventHandler for Handler {
 
     async fn ready(&self, ctx: Context, ready: Ready) {
         ctx.set_activity(Some(ActivityData::playing("記憶大賽....")));
-        println!(
-            "{} {} {}",
-            system_output(),
-            ready.user.name.green().bold(),
-            "connect success".green()
-        );
 
         let guild_id = GuildId::new(
             env::var("GUILD_ID")
@@ -191,6 +185,13 @@ impl EventHandler for Handler {
                 );
             }
         }
+
+        println!(
+            "{} {} {}",
+            system_output(),
+            ready.user.name.green().bold(),
+            "connect success".green().bold()
+        );
     }
 }
 
