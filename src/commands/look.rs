@@ -1,7 +1,8 @@
-use serenity::builder::CreateCommand;
-use serenity::model::prelude::ChannelId;
-use std::{collections::HashMap, fs};
+use std::collections::HashMap;
 
+use serenity::{builder::CreateCommand, model::prelude::ChannelId};
+
+use crate::modules::func::load_reminders_from_file;
 use crate::Reminder;
 
 pub fn register() -> CreateCommand {
@@ -15,13 +16,6 @@ pub fn run() -> String {
     }
 }
 
-fn load_reminders_from_file(
-) -> Result<HashMap<ChannelId, Vec<Reminder>>, Box<dyn std::error::Error>> {
-    let file_content = fs::read_to_string("reminders.json")?;
-    let reminders: HashMap<ChannelId, Vec<Reminder>> = serde_json::from_str(&file_content)?;
-    Ok(reminders)
-}
-
 fn format_reminders(reminders: HashMap<ChannelId, Vec<Reminder>>) -> String {
     let mut output = String::new();
     for (channel_id, reminder_list) in reminders {
@@ -33,7 +27,7 @@ fn format_reminders(reminders: HashMap<ChannelId, Vec<Reminder>>) -> String {
                     index, reminder.weekdays, reminder.time, reminder.message
                 ));
             }
-        }else {
+        } else {
             output.push_str(">>尚無提醒")
         }
         output.push_str("\n");

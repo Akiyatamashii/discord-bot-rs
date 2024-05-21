@@ -1,5 +1,4 @@
-use serenity::builder::CreateCommand;
-use serenity::model::application::ResolvedOption;
+use serenity::{builder::CreateCommand, model::application::ResolvedOption};
 
 pub fn run(_options: &[ResolvedOption]) -> String {
     "Pong!".to_string()

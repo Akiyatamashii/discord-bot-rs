@@ -1,12 +1,25 @@
+use std::{collections::HashMap, error::Error, fs};
+
+use colored::*;
 use serenity::{
     all::{
         ChannelId, CommandInteraction, CreateInteractionResponse, CreateInteractionResponseMessage,
     },
     prelude::*,
 };
-use std::{collections::HashMap, fs};
 
 use crate::Reminder;
+
+const SYSTEM_OUTPUT: &str = "[SYSTEM_OUTPUT]:";
+const ERROR_OUTPUT: &str = "[ERROR]:";
+
+pub fn system_output() -> ColoredString {
+    SYSTEM_OUTPUT.blue()
+}
+
+pub fn error_output() -> ColoredString {
+    ERROR_OUTPUT.red()
+}
 
 pub async fn interaction_response(
     ctx: &Context,
@@ -44,4 +57,12 @@ pub async fn check_permission(ctx: &Context, command: &CommandInteraction) -> bo
         }
     }
     true
+}
+
+pub fn save_reminders_to_file(
+    reminders: &HashMap<ChannelId, Vec<Reminder>>,
+) -> Result<(), Box<dyn Error>> {
+    let json_content = serde_json::to_string(reminders)?;
+    std::fs::write("reminders.json", json_content)?;
+    Ok(())
 }

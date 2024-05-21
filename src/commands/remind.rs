@@ -1,13 +1,17 @@
+use std::{collections::HashMap, error::Error, sync::Arc};
+
 use chrono::{NaiveTime, Weekday};
-use serenity::all::ResolvedValue;
-use serenity::builder::{CreateCommand, CreateCommandOption};
-use serenity::model::application::{CommandOptionType, ResolvedOption};
-use serenity::model::id::ChannelId;
-use std::collections::HashMap;
-use std::error::Error;
-use std::sync::Arc;
+use serenity::{
+    all::ResolvedValue,
+    builder::{CreateCommand, CreateCommandOption},
+    model::{
+        application::{CommandOptionType, ResolvedOption},
+        id::ChannelId,
+    },
+};
 use tokio::sync::RwLock;
 
+use crate::modules::func::save_reminders_to_file;
 use crate::Reminder;
 
 pub async fn run<'a>(
@@ -112,12 +116,4 @@ pub fn register() -> CreateCommand {
             CreateCommandOption::new(CommandOptionType::String, "message", "提醒訊息")
                 .required(true),
         )
-}
-
-fn save_reminders_to_file(
-    reminders: &HashMap<ChannelId, Vec<Reminder>>,
-) -> Result<(), Box<dyn Error>> {
-    let json_content = serde_json::to_string(reminders)?;
-    std::fs::write("reminders.json", json_content)?;
-    Ok(())
 }

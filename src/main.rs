@@ -1,3 +1,5 @@
+use std::{collections::HashMap, env, sync::Arc};
+
 use chrono::{NaiveDate, NaiveTime, Weekday};
 use colored::*;
 use dotenv::dotenv;
@@ -8,11 +10,13 @@ use serenity::{
     model::{channel::Message, gateway::Ready},
     prelude::*,
 };
-use std::{collections::HashMap, env, fs, sync::Arc};
 use tokio::sync::{Notify, RwLock};
 
 mod commands;
 mod modules;
+use modules::func::{
+    check_permission, error_output, interaction_response, load_reminders_from_file, system_output,
+};
 
 #[derive(Serialize, Deserialize, Clone)]
 struct Reminder {
@@ -31,15 +35,6 @@ struct Handler {
     trigger_notify: Arc<Notify>, // 用於觸發立即檢查
 }
 
-impl Handler {
-    async fn save_reminders(&self) -> Result<(), Box<dyn std::error::Error>> {
-        let reminders = self.reminders.read().await;
-        let json_content = serde_json::to_string(&*reminders)?;
-        fs::write("reminders.json", json_content)?;
-        Ok(())
-    }
-}
-
 #[async_trait]
 impl EventHandler for Handler {
     async fn message(&self, _ctx: Context, msg: Message) {
@@ -51,7 +46,8 @@ impl EventHandler for Handler {
     async fn interaction_create(&self, ctx: Context, interaction: Interaction) {
         if let Interaction::Command(command) = interaction {
             println!(
-                "{} {} {} {}",
+                "{} {} {} {} {}",
+                system_output(),
                 "Received interaction:".green(),
                 command.data.name.yellow().bold(),
                 ",from:".green(),
@@ -60,16 +56,36 @@ impl EventHandler for Handler {
             let _ = match command.data.name.as_str() {
                 "ping" => {
                     let msg = commands::ping::run(&command.data.options());
-                    modules::func::interaction_response(&ctx, &command, msg, true).await;
+                    interaction_response(&ctx, &command, msg, true).await;
                     true
                 }
                 "look" => {
                     let msg = commands::look::run();
-                    modules::func::interaction_response(&ctx, &command, msg, true).await;
+                    interaction_response(&ctx, &command, msg, true).await;
                     true
                 }
+
+                "chat" => {
+                    match commands::chat::run(&ctx, &command, &command.data.options()).await {
+                        Ok(msg) => {
+                            if msg != "" {
+                                interaction_response(&ctx, &command, msg, false).await;
+                            }
+                            true
+                        }
+                        Err(err) => {
+                            println!(
+                                "{} {} {}",
+                                error_output(),
+                                "OpenAI mission filed:".red(),
+                                err
+                            );
+                            false
+                        }
+                    }
+                }
                 "rm_remind" => {
-                    if !modules::func::check_permission(&ctx, &command).await {
+                    if !check_permission(&ctx, &command).await {
                         return;
                     }
                     let channel_id = command.channel_id;
@@ -81,17 +97,22 @@ impl EventHandler for Handler {
                     .await
                     {
                         Ok(msg) => {
-                            modules::func::interaction_response(&ctx, &command, msg, false).await;
+                            interaction_response(&ctx, &command, msg, false).await;
                             true
                         }
                         Err(err) => {
-                            println!("{} {}", "Failed to remove reminder:".red(), err);
+                            println!(
+                                "{} {} {}",
+                                error_output(),
+                                "Failed to remove reminder:".red(),
+                                err
+                            );
                             false
                         }
                     }
                 }
                 "remind" => {
-                    if !modules::func::check_permission(&ctx, &command).await {
+                    if !check_permission(&ctx, &command).await {
                         return;
                     }
                     let channel_id = command.channel_id;
@@ -103,12 +124,17 @@ impl EventHandler for Handler {
                     .await
                     {
                         Ok(msg) => {
-                            modules::func::interaction_response(&ctx, &command, msg, false).await;
+                            interaction_response(&ctx, &command, msg, false).await;
                             self.trigger_notify.notify_one();
                             true
                         }
                         Err(err) => {
-                            println!("{} {}", "Failed to set reminder:".red(), err);
+                            println!(
+                                "{} {} {}",
+                                error_output(),
+                                "Failed to set reminder:".red(),
+                                err
+                            );
                             false
                         }
                     }
@@ -121,10 +147,12 @@ impl EventHandler for Handler {
     async fn ready(&self, ctx: Context, ready: Ready) {
         ctx.set_activity(Some(ActivityData::playing("記憶大賽....")));
         println!(
-            "{} {}",
+            "{} {} {}",
+            system_output(),
             ready.user.name.green().bold(),
             "connect success".green()
         );
+
         let guild_id = GuildId::new(
             env::var("GUILD_ID")
                 .expect("Expected GUILD_ID in environment")
@@ -140,6 +168,7 @@ impl EventHandler for Handler {
                     commands::remind::register(),
                     commands::look::register(),
                     commands::rm_remind::register(),
+                    commands::chat::register(),
                 ],
             )
             .await;
@@ -147,13 +176,19 @@ impl EventHandler for Handler {
             Ok(cmds) => {
                 let command_names: Vec<_> = cmds.iter().map(|cmd| &cmd.name).collect();
                 println!(
-                    "{} {:?}",
+                    "{} {} {:?}",
+                    system_output(),
                     "Created slash commands: ".green(),
                     command_names
                 );
             }
             Err(err) => {
-                println!("{} {:?}", "Failed to create commands:".red(), err);
+                println!(
+                    "{} {} {:?}",
+                    error_output(),
+                    "Failed to create commands:".red(),
+                    err
+                );
             }
         }
     }
@@ -166,7 +201,7 @@ async fn main() {
     let token = env::var("TOKEN").expect("missing token");
     let intents = GatewayIntents::GUILD_MESSAGES | GatewayIntents::MESSAGE_CONTENT;
 
-    let reminders = match modules::func::load_reminders_from_file() {
+    let reminders = match load_reminders_from_file() {
         Ok(r) => Arc::new(RwLock::new(r)),
         Err(_) => Arc::new(RwLock::new(HashMap::new())),
     };
@@ -191,6 +226,6 @@ async fn main() {
     ));
 
     if let Err(why) = client.start().await {
-        println!("{} {:?}", "Client error:".red(), why);
+        println!("{} {} {:?}", error_output(), "Client error:".red(), why);
     }
 }

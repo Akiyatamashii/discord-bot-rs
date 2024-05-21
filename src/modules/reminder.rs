@@ -1,11 +1,14 @@
+use std::{collections::HashMap, sync::Arc};
+
 use chrono::{Datelike, NaiveTime, Timelike, Utc};
 use chrono_tz::Tz;
-
 use serenity::all::{ChannelId, Http};
-use std::{collections::HashMap, sync::Arc};
-use tokio::sync::RwLock;
-use tokio::time::{interval, Duration};
+use tokio::{
+    sync::RwLock,
+    time::{interval, Duration},
+};
 
+use crate::modules::func::save_reminders_to_file;
 use crate::{Handler, Reminder};
 
 pub async fn remind_task(
@@ -22,11 +25,11 @@ pub async fn remind_task(
         tokio::select! {
             _ = thirty_min_check.tick() => {
                 // 每30分鐘檢查一次提醒
-                check_reminders(http.clone(), reminders.clone(), handler.clone(), timezone, 30).await;
+                check_reminders(http.clone(), reminders.clone(), timezone, 30).await;
             },
             _ = trigger_notify.notified() => {
                 // 當新提醒被設定時，立即檢查提醒
-                check_reminders(http.clone(), reminders.clone(), handler.clone(), timezone, 30).await;
+                check_reminders(http.clone(), reminders.clone(), timezone, 30).await;
             },
             _ = cancel_notify.notified() => {
                 println!("Task cancellation received, exiting task loop.");
@@ -39,7 +42,6 @@ pub async fn remind_task(
 async fn check_reminders(
     http: Arc<Http>,
     reminders: Arc<RwLock<HashMap<ChannelId, Vec<Reminder>>>>,
-    handler: Arc<Handler>,
     timezone: Tz,
     minutes_ahead: i64,
 ) {
@@ -68,21 +70,13 @@ async fn check_reminders(
 
     if !upcoming_reminders.is_empty() {
         // 啟動每2分鐘和每秒檢查即將觸發的提醒
-        start_imminent_check(
-            http,
-            reminders.clone(),
-            handler.clone(),
-            timezone,
-            upcoming_reminders,
-        )
-        .await;
+        start_imminent_check(http, reminders.clone(), timezone, upcoming_reminders).await;
     }
 }
 
 async fn start_imminent_check(
     http: Arc<Http>,
     reminders: Arc<RwLock<HashMap<ChannelId, Vec<Reminder>>>>,
-    handler: Arc<Handler>,
     timezone: Tz,
     upcoming_reminders: Vec<(ChannelId, Reminder)>,
 ) {
@@ -109,7 +103,6 @@ async fn start_imminent_check(
             start_second_check(
                 http.clone(),
                 reminders.clone(),
-                handler.clone(),
                 timezone,
                 imminent_reminders,
             )
@@ -121,7 +114,6 @@ async fn start_imminent_check(
 async fn start_second_check(
     http: Arc<Http>,
     reminders: Arc<RwLock<HashMap<ChannelId, Vec<Reminder>>>>,
-    handler: Arc<Handler>,
     timezone: Tz,
     imminent_reminders: Vec<(ChannelId, Reminder)>,
 ) {
@@ -154,7 +146,7 @@ async fn start_second_check(
                     .find(|r| r.time == reminder.time && r.message == reminder.message)
                 {
                     rem.last_executed = Some(now.date_naive());
-                    if let Err(err) = handler.save_reminders().await {
+                    if let Err(err) = save_reminders_to_file(&reminders_lock) {
                         println!("Error saving reminders: {:?}", err);
                     }
                 }

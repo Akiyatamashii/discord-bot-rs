@@ -1,17 +1,25 @@
-use crate::Reminder;
-use serenity::all::{CommandOptionType, ResolvedOption, ResolvedValue};
-use serenity::builder::{CreateCommand, CreateCommandOption};
-use serenity::model::id::ChannelId;
 use std::collections::HashMap;
 use std::sync::Arc;
+
+use serenity::{
+    all::{CommandOptionType, ResolvedOption, ResolvedValue},
+    builder::{CreateCommand, CreateCommandOption},
+    model::id::ChannelId,
+};
 use tokio::sync::RwLock;
+
+use crate::Reminder;
 
 pub fn register() -> CreateCommand {
     CreateCommand::new("rm_remind")
         .description("移除指定的提醒")
         .add_option(
-            CreateCommandOption::new(CommandOptionType::Integer, "index", "提醒的索引：請參照\"/look\"產生的索引")
-                .required(true),
+            CreateCommandOption::new(
+                CommandOptionType::Integer,
+                "index",
+                "提醒的索引：請參照\"/look\"產生的索引",
+            )
+            .required(true),
         )
 }
 
