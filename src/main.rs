@@ -119,7 +119,6 @@ impl EventHandler for Handler {
                         &command.data.options(),
                         self.reminders.clone(),
                         channel_id,
-                        
                     )
                     .await
                     {
@@ -209,7 +208,6 @@ async fn main() {
     let handler = Handler {
         reminders: reminders.clone(),
         cancel_notify: Arc::new(Notify::new()),
-        trigger_notify: Arc::new(Notify::new()), // 初始化觸發通知
     };
 
     let mut client = Client::builder(&token, intents)
