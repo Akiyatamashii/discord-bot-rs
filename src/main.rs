@@ -53,7 +53,7 @@ impl EventHandler for Handler {
     async fn interaction_create(&self, ctx: Context, interaction: Interaction) {
         if let Interaction::Command(command) = interaction {
             println!("Received command interaction: {}", command.data.name);
-            let result = match command.data.name.as_str() {
+            let _ = match command.data.name.as_str() {
                 "ping" => {
                     let msg = commands::ping::run(&command.data.options());
                     interaction_response(&ctx, &command, msg, true).await;
@@ -111,12 +111,6 @@ impl EventHandler for Handler {
                 }
                 _ => false,
             };
-
-            if result {
-                println!("成功");
-            } else {
-                println!("失敗");
-            }
         }
     }
 
