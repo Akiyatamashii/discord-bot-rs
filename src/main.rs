@@ -4,8 +4,8 @@ use dotenv::dotenv;
 use serde::{Deserialize, Serialize};
 use serenity::{
     all::{
-        ActivityData, ChannelId, CreateInteractionResponse, CreateInteractionResponseMessage,
-        GuildId, Http, Interaction,
+        ActivityData, ChannelId, CommandInteraction, CreateInteractionResponse,
+        CreateInteractionResponseMessage, GuildId, Http, Interaction,
     },
     async_trait,
     model::{channel::Message, gateway::Ready},
@@ -18,14 +18,16 @@ mod commands;
 
 #[derive(Serialize, Deserialize, Clone)]
 struct Reminder {
-    weekdays: Vec<Weekday>,
-    time: NaiveTime,
-    message: String,
-    last_executed: Option<NaiveDate>,
+    //提醒器結構
+    weekdays: Vec<Weekday>,           //天數
+    time: NaiveTime,                  //時間
+    message: String,                  //發送訊息
+    last_executed: Option<NaiveDate>, //最後執行時間
 }
 
 #[derive(Clone)]
 struct Handler {
+    //處理器結構
     reminders: Arc<RwLock<HashMap<ChannelId, Vec<Reminder>>>>,
     cancel_notify: Arc<Notify>,
     trigger_notify: Arc<Notify>, // 用於觸發立即檢查
@@ -50,22 +52,16 @@ impl EventHandler for Handler {
 
     async fn interaction_create(&self, ctx: Context, interaction: Interaction) {
         if let Interaction::Command(command) = interaction {
-            if let Some(permissions) = command.member.clone().unwrap().permissions {
-                if !permissions.administrator() {
-                    let data = CreateInteractionResponseMessage::new()
-                        .content("你沒有權限使用指令")
-                        .ephemeral(true);
-                    let builder = CreateInteractionResponse::Message(data);
-                    if let Err(err) = command.create_response(&ctx.http, builder).await {
-                        println!("Cannot respond to slash command: {err}");
-                    }
-                }
-            }
             println!("Received command interaction: {}", command.data.name);
             let content = match command.data.name.as_str() {
                 "ping" => Some(commands::ping::run(&command.data.options())),
                 "look" => Some(commands::look::run()),
                 "rm_remind" => {
+                    if let Err(err) = check_permission(&ctx, &command).await {
+                        if err == -1 {
+                            return;
+                        }
+                    }
                     let channel_id = command.channel_id;
                     match commands::rm_remind::run(
                         &command.data.options(),
@@ -79,6 +75,11 @@ impl EventHandler for Handler {
                     }
                 }
                 "remind" => {
+                    if let Err(err) = check_permission(&ctx, &command).await {
+                        if err == -1 {
+                            return;
+                        }
+                    }
                     let channel_id = command.channel_id;
                     match commands::remind::run(
                         &command.data.options(),
@@ -304,6 +305,22 @@ fn load_reminders_from_file(
     let file_content = fs::read_to_string("reminders.json")?;
     let reminders: HashMap<ChannelId, Vec<Reminder>> = serde_json::from_str(&file_content)?;
     Ok(reminders)
+}
+
+async fn check_permission(ctx: &Context, command: &CommandInteraction) -> Result<(), i8> {
+    if let Some(permissions) = command.member.clone().unwrap().permissions {
+        if !permissions.administrator() {
+            let data = CreateInteractionResponseMessage::new()
+                .content("你沒有許可權使用指令")
+                .ephemeral(true);
+            let builder = CreateInteractionResponse::Message(data);
+            if let Err(err) = command.create_response(&ctx.http, builder).await {
+                println!("Cannot respond to slash command: {err}");
+            }
+            return Err(-1 as i8);
+        }
+    }
+    Ok(())
 }
 
 #[tokio::main]
