@@ -8,7 +8,7 @@ use std::error::Error;
 use std::sync::Arc;
 use tokio::sync::RwLock;
 
-use super::super::Reminder;
+use crate::Reminder;
 
 pub async fn run<'a>(
     options: &'a [ResolvedOption<'a>],

@@ -10,7 +10,7 @@ pub fn register() -> CreateCommand {
     CreateCommand::new("rm_remind")
         .description("移除指定的提醒")
         .add_option(
-            CreateCommandOption::new(CommandOptionType::Integer, "index", "提醒的索引")
+            CreateCommandOption::new(CommandOptionType::Integer, "index", "提醒的索引：請參照\"/look\"產生的索引")
                 .required(true),
         )
 }
