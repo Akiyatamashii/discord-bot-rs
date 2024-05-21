@@ -53,14 +53,20 @@ impl EventHandler for Handler {
     async fn interaction_create(&self, ctx: Context, interaction: Interaction) {
         if let Interaction::Command(command) = interaction {
             println!("Received command interaction: {}", command.data.name);
-            let content = match command.data.name.as_str() {
-                "ping" => Some(commands::ping::run(&command.data.options())),
-                "look" => Some(commands::look::run()),
+            let result = match command.data.name.as_str() {
+                "ping" => {
+                    let msg = commands::ping::run(&command.data.options());
+                    interaction_response(&ctx, &command, msg, true).await;
+                    true
+                }
+                "look" => {
+                    let msg = commands::look::run();
+                    interaction_response(&ctx, &command, msg, true).await;
+                    true
+                }
                 "rm_remind" => {
-                    if let Err(err) = check_permission(&ctx, &command).await {
-                        if err == -1 {
-                            return;
-                        }
+                    if !check_permission(&ctx, &command).await {
+                        return;
                     }
                     let channel_id = command.channel_id;
                     match commands::rm_remind::run(
@@ -70,15 +76,19 @@ impl EventHandler for Handler {
                     )
                     .await
                     {
-                        Ok(msg) => Some(msg),
-                        Err(err) => Some(format!("Failed to set reminder: {}", err)),
+                        Ok(msg) => {
+                            interaction_response(&ctx, &command, msg, false).await;
+                            true
+                        }
+                        Err(err) => {
+                            println!("Failed to remove reminder: {}", err);
+                            false
+                        }
                     }
                 }
                 "remind" => {
-                    if let Err(err) = check_permission(&ctx, &command).await {
-                        if err == -1 {
-                            return;
-                        }
+                    if !check_permission(&ctx, &command).await {
+                        return;
                     }
                     let channel_id = command.channel_id;
                     match commands::remind::run(
@@ -89,22 +99,23 @@ impl EventHandler for Handler {
                     .await
                     {
                         Ok(msg) => {
-                            self.trigger_notify.notify_one(); // 立即觸發檢查
-                            Some(msg)
+                            interaction_response(&ctx, &command, msg, false).await;
+                            self.trigger_notify.notify_one();
+                            true
                         }
-                        Err(err) => Some(format!("Failed to set reminder: {}", err)),
+                        Err(err) => {
+                            println!("Failed to set reminder: {}", err);
+                            false
+                        }
                     }
                 }
-                _ => Some(String::from("no command")),
+                _ => false,
             };
-            if let Some(content) = content {
-                let data = CreateInteractionResponseMessage::new()
-                    .content(content)
-                    .ephemeral(true);
-                let builder = CreateInteractionResponse::Message(data);
-                if let Err(err) = command.create_response(&ctx.http, builder).await {
-                    println!("Cannot respond to slash command: {err}");
-                }
+
+            if result {
+                println!("成功");
+            } else {
+                println!("失敗");
             }
         }
     }
@@ -142,6 +153,37 @@ impl EventHandler for Handler {
                 println!("Failed to create commands: {:?}", err);
             }
         }
+    }
+}
+
+async fn check_permission(ctx: &Context, command: &CommandInteraction) -> bool {
+    if let Some(permissions) = command.member.clone().unwrap().permissions {
+        if !permissions.administrator() {
+            let data = CreateInteractionResponseMessage::new()
+                .content("你沒有許可權使用指令")
+                .ephemeral(true);
+            let builder = CreateInteractionResponse::Message(data);
+            if let Err(err) = command.create_response(&ctx.http, builder).await {
+                println!("Cannot respond to slash command: {err}");
+            }
+            return false;
+        }
+    }
+    true
+}
+
+async fn interaction_response(
+    ctx: &Context,
+    command: &CommandInteraction,
+    msg: String,
+    ephemeral: bool,
+) {
+    let data = CreateInteractionResponseMessage::new()
+        .content(msg)
+        .ephemeral(ephemeral);
+    let builder = CreateInteractionResponse::Message(data);
+    if let Err(err) = command.create_response(ctx.http.clone(), builder).await {
+        println!("Failed to send respond:{}", err)
     }
 }
 
@@ -305,22 +347,6 @@ fn load_reminders_from_file(
     let file_content = fs::read_to_string("reminders.json")?;
     let reminders: HashMap<ChannelId, Vec<Reminder>> = serde_json::from_str(&file_content)?;
     Ok(reminders)
-}
-
-async fn check_permission(ctx: &Context, command: &CommandInteraction) -> Result<(), i8> {
-    if let Some(permissions) = command.member.clone().unwrap().permissions {
-        if !permissions.administrator() {
-            let data = CreateInteractionResponseMessage::new()
-                .content("你沒有許可權使用指令")
-                .ephemeral(true);
-            let builder = CreateInteractionResponse::Message(data);
-            if let Err(err) = command.create_response(&ctx.http, builder).await {
-                println!("Cannot respond to slash command: {err}");
-            }
-            return Err(-1 as i8);
-        }
-    }
-    Ok(())
 }
 
 #[tokio::main]

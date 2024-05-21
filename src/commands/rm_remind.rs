@@ -19,7 +19,7 @@ pub async fn run<'a>(
     options: &'a [ResolvedOption<'a>],
     reminders: Arc<RwLock<HashMap<ChannelId, Vec<Reminder>>>>,
     channel_id: ChannelId,
-) -> Result<String, Box<dyn std::error::Error>> {
+) -> Result<String, Box<dyn std::error::Error + Send + Sync>> {
     let index_option = options.iter().find(|opt| opt.name == "index");
 
     if let Some(index_option) = index_option {
@@ -29,7 +29,7 @@ pub async fn run<'a>(
             if let Some(reminder_list) = reminders_lock.get_mut(&channel_id) {
                 if (index as usize) < reminder_list.len() {
                     reminder_list.remove(index as usize);
-                    save_reminders_to_file(&*reminders_lock)?;
+                    save_reminders_to_file(&*reminders_lock).unwrap();
                     return Ok(format!("提醒索引 '{}' 已移除", index + 1));
                 } else {
                     return Ok(format!("索引 '{}' 無效", index + 1));

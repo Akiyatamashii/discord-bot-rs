@@ -14,7 +14,7 @@ pub async fn run<'a>(
     options: &'a [ResolvedOption<'a>],
     reminder: Arc<RwLock<HashMap<ChannelId, Vec<Reminder>>>>,
     channel_id: ChannelId,
-) -> Result<String, Box<dyn Error>> {
+) -> Result<String, Box<dyn Error + Send + Sync>> {
     let weekdays = options
         .iter()
         .find(|opt| opt.name == "weekdays")
