@@ -32,7 +32,6 @@ struct Handler {
     //處理器結構
     reminders: Arc<RwLock<HashMap<ChannelId, Vec<Reminder>>>>,
     cancel_notify: Arc<Notify>,
-    trigger_notify: Arc<Notify>, // 用於觸發立即檢查
 }
 
 #[async_trait]
