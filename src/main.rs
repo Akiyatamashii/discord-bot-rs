@@ -31,7 +31,7 @@ struct Reminder {
 struct Handler {
     //處理器結構
     reminders: Arc<RwLock<HashMap<ChannelId, Vec<Reminder>>>>,
-    cancel_notify: Arc<Notify>,
+    trigger_notify: Arc<Notify>,
 }
 
 #[async_trait]
@@ -119,6 +119,7 @@ impl EventHandler for Handler {
                         &command.data.options(),
                         self.reminders.clone(),
                         channel_id,
+                        &self.trigger_notify,
                     )
                     .await
                     {
@@ -206,8 +207,8 @@ async fn main() {
     };
 
     let handler = Handler {
-        reminders: reminders.clone(),
-        cancel_notify: Arc::new(Notify::new()),
+        reminders: Arc::clone(&reminders),
+        trigger_notify: Arc::new(Notify::new()),
     };
 
     let mut client = Client::builder(&token, intents)
@@ -219,8 +220,8 @@ async fn main() {
 
     tokio::spawn(modules::reminder::remind_task(
         http,
-        reminders.clone(),
-        Arc::new(handler.clone()),
+        Arc::clone(&handler.reminders),
+        Arc::clone(&handler.trigger_notify),
     ));
 
     if let Err(why) = client.start().await {

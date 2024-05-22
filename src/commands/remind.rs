@@ -9,7 +9,7 @@ use serenity::{
         id::ChannelId,
     },
 };
-use tokio::sync::RwLock;
+use tokio::sync::{Notify, RwLock};
 
 use crate::modules::func::save_reminders_to_file;
 use crate::Reminder;
@@ -18,6 +18,7 @@ pub async fn run<'a>(
     options: &'a [ResolvedOption<'a>],
     reminder: Arc<RwLock<HashMap<ChannelId, Vec<Reminder>>>>,
     channel_id: ChannelId,
+    notify: &Arc<Notify>,
 ) -> Result<String, Box<dyn Error + Send + Sync>> {
     let weekdays = options
         .iter()
@@ -77,20 +78,23 @@ pub async fn run<'a>(
     let reminder_message = message.to_string();
 
     println!("在週{:?} {} 點 提醒：{}", weekdays, time, reminder_message);
-    let mut reminders = reminder.write().await;
-    reminders
-        .entry(channel_id)
-        .or_insert_with(Vec::new)
-        .push(Reminder {
-            weekdays,
-            time,
-            message: reminder_message,
-            last_executed: None,
-        });
+
+    {
+        let mut reminders = reminder.write().await;
+        reminders
+            .entry(channel_id)
+            .or_insert_with(Vec::new)
+            .push(Reminder {
+                weekdays,
+                time,
+                message: reminder_message,
+                last_executed: None,
+            });
+        save_reminders_to_file(&*reminders).expect("Failed to save reminders");
+    }
 
     println!("已設定每週提醒");
-
-    save_reminders_to_file(&*reminders).expect("Failed to save reminders");
+    notify.notify_one();
 
     Ok("已設定每週提醒".to_string())
 }
