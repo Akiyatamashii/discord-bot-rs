@@ -83,27 +83,19 @@ impl EventHandler for Handler {
                         }
                     }
                 }
-                "rm_remind" => {
-                    if !check_permission(&ctx, &command).await {
-                        return;
-                    }
-                    let channel_id = command.channel_id;
-                    match commands::rm_remind::run(
-                        &command.data.options(),
-                        self.reminders.clone(),
-                        channel_id,
-                    )
-                    .await
-                    {
+                "image" => {
+                    match commands::image::run(&ctx, &command, &command.data.options()).await {
                         Ok(msg) => {
-                            interaction_response(&ctx, &command, msg, false).await;
+                            if msg != "" {
+                                interaction_response(&ctx, &command, msg, false).await;
+                            }
                             true
                         }
                         Err(err) => {
                             println!(
                                 "{} {} {}",
                                 error_output(),
-                                "Failed to remove reminder:".red(),
+                                "OpenAI mission filed:".red(),
                                 err
                             );
                             false
@@ -138,6 +130,33 @@ impl EventHandler for Handler {
                         }
                     }
                 }
+                "rm_remind" => {
+                    if !check_permission(&ctx, &command).await {
+                        return;
+                    }
+                    let channel_id = command.channel_id;
+                    match commands::rm_remind::run(
+                        &command.data.options(),
+                        self.reminders.clone(),
+                        channel_id,
+                    )
+                    .await
+                    {
+                        Ok(msg) => {
+                            interaction_response(&ctx, &command, msg, false).await;
+                            true
+                        }
+                        Err(err) => {
+                            println!(
+                                "{} {} {}",
+                                error_output(),
+                                "Failed to remove reminder:".red(),
+                                err
+                            );
+                            false
+                        }
+                    }
+                }
                 _ => false,
             };
         }
@@ -162,6 +181,7 @@ impl EventHandler for Handler {
                     commands::look::register(),
                     commands::rm_remind::register(),
                     commands::chat::register(),
+                    commands::image::register(),
                 ],
             )
             .await;

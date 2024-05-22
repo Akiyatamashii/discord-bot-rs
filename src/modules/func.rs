@@ -1,5 +1,6 @@
-use std::{collections::HashMap, error::Error, fs};
+use std::{collections::HashMap, env, error::Error, fs};
 
+use async_openai::config::OpenAIConfig;
 use colored::*;
 use serenity::{
     all::{
@@ -21,6 +22,11 @@ pub fn error_output() -> ColoredString {
     ERROR_OUTPUT.red()
 }
 
+pub fn openai_config() -> OpenAIConfig {
+    let api = env::var("API_KEY").unwrap();
+    OpenAIConfig::new().with_api_key(api)
+}
+
 pub async fn interaction_response(
     ctx: &Context,
     command: &CommandInteraction,
@@ -31,8 +37,8 @@ pub async fn interaction_response(
         .content(msg)
         .ephemeral(ephemeral);
     let builder = CreateInteractionResponse::Message(data);
-    if let Err(err) = command.create_response(ctx.http.clone(), builder).await {
-        println!("Failed to send respond:{}", err)
+    if let Err(err) = command.create_response(&ctx.http, builder).await {
+        println!("{} Failed to send respond:{}", error_output(), err)
     }
 }
 

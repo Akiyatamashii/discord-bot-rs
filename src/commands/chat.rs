@@ -1,7 +1,6 @@
-use std::{env, error::Error};
+use std::error::Error;
 
 use async_openai::{
-    config::OpenAIConfig,
     types::{
         ChatCompletionRequestSystemMessageArgs, ChatCompletionRequestUserMessageArgs,
         CreateChatCompletionRequestArgs,
@@ -19,14 +18,20 @@ use serenity::{
     futures::StreamExt,
 };
 
-use crate::modules::func::error_output;
+use crate::modules::func::{error_output, openai_config};
 
 pub fn register() -> CreateCommand {
     CreateCommand::new("chat")
-        .description("openai chat")
+        .description("與ChatGPT聊天")
         .add_option(
-            CreateCommandOption::new(CommandOptionType::String, "prompt", "提示詞").required(true),
+            CreateCommandOption::new(CommandOptionType::String, "message", "給ChatGPT的訊息")
+                .required(true),
         )
+        .add_option(CreateCommandOption::new(
+            CommandOptionType::Boolean,
+            "public",
+            "是否公開顯示",
+        ))
 }
 
 pub async fn run<'a>(
@@ -34,10 +39,21 @@ pub async fn run<'a>(
     command: &CommandInteraction,
     options: &'a [ResolvedOption<'a>],
 ) -> Result<String, Box<dyn std::error::Error + Send + Sync>> {
-    let prompt = options.iter().find(|opt| opt.name == "prompt");
+    let prompt = options.iter().find(|opt| opt.name == "message");
+    let public_result = options.iter().find(|opt| opt.name == "public");
+
+    let public = if let Some(public_option) = public_result {
+        if let ResolvedValue::Boolean(public) = public_option.value {
+            public
+        } else {
+            false
+        }
+    } else {
+        false
+    };
     if let Some(prompt) = prompt {
         if let ResolvedValue::String(prompt) = prompt.value {
-            if let Err(err) = chat(&ctx, command, prompt).await {
+            if let Err(err) = chat(&ctx, command, prompt, &public).await {
                 println!("{} {} {}", error_output(), "OpenAI mission failed:", err)
             }
             return Ok("".to_string());
@@ -51,12 +67,10 @@ pub async fn run<'a>(
 async fn chat(
     ctx: &Context,
     command: &CommandInteraction,
-    prompt: &str,
+    message: &str,
+    public: &bool,
 ) -> Result<(), Box<dyn Error + Send + Sync>> {
-    let api_key = env::var("API_KEY").expect("無法獲取API_KEY");
-    let config = OpenAIConfig::new().with_api_key(api_key);
-
-    let client = Client::with_config(config);
+    let client = Client::with_config(openai_config());
     let req = CreateChatCompletionRequestArgs::default()
         .model("gpt-4o")
         .max_tokens(4096 as u16)
@@ -66,7 +80,7 @@ async fn chat(
                 .build()?
                 .into(),
             ChatCompletionRequestUserMessageArgs::default()
-                .content(prompt)
+                .content(message)
                 .build()?
                 .into(),
         ])
@@ -74,7 +88,9 @@ async fn chat(
 
     let mut stream = client.chat().create_stream(req).await?;
 
-    let data = CreateInteractionResponseMessage::new().content("回覆中請稍後...".to_string());
+    let data = CreateInteractionResponseMessage::new()
+        .content("回覆中請稍後...".to_string())
+        .ephemeral(!public);
     let builder = CreateInteractionResponse::Message(data);
     command.create_response(&ctx.http, builder).await?;
     let mut message = String::from("");

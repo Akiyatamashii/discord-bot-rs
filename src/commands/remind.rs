@@ -14,6 +14,31 @@ use tokio::sync::{Notify, RwLock};
 use crate::modules::func::save_reminders_to_file;
 use crate::Reminder;
 
+pub fn register() -> CreateCommand {
+    CreateCommand::new("remind")
+        .description("設置提醒")
+        .add_option(
+            CreateCommandOption::new(
+                CommandOptionType::String,
+                "weekdays",
+                "日期：需要提醒的日期，以 \"1,4,7\" 格式表示",
+            )
+            .required(true),
+        )
+        .add_option(
+            CreateCommandOption::new(
+                CommandOptionType::String,
+                "time",
+                "時間：提醒時間，以 \"HH:MM\" 格式表示",
+            )
+            .required(true),
+        )
+        .add_option(
+            CreateCommandOption::new(CommandOptionType::String, "message", "提醒訊息")
+                .required(true),
+        )
+}
+
 pub async fn run<'a>(
     options: &'a [ResolvedOption<'a>],
     reminder: Arc<RwLock<HashMap<ChannelId, Vec<Reminder>>>>,
@@ -97,29 +122,4 @@ pub async fn run<'a>(
     notify.notify_one();
 
     Ok("已設定每週提醒".to_string())
-}
-
-pub fn register() -> CreateCommand {
-    CreateCommand::new("remind")
-        .description("設置提醒")
-        .add_option(
-            CreateCommandOption::new(
-                CommandOptionType::String,
-                "weekdays",
-                "日期：需要提醒的日期，以 \"1,4,7\" 格式表示",
-            )
-            .required(true),
-        )
-        .add_option(
-            CreateCommandOption::new(
-                CommandOptionType::String,
-                "time",
-                "時間：提醒時間，以 \"HH:MM\" 格式表示",
-            )
-            .required(true),
-        )
-        .add_option(
-            CreateCommandOption::new(CommandOptionType::String, "message", "提醒訊息")
-                .required(true),
-        )
 }
