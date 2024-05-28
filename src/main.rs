@@ -58,6 +58,10 @@ impl EventHandler for Handler {
                     interaction_response(&ctx, &command, msg, true).await;
                     true
                 }
+                "info" => {
+                    commands::info::run(&ctx, &command, &command.data.options()).await;
+                    true
+                }
                 "look" => {
                     let msg = commands::look::run();
                     interaction_response(&ctx, &command, msg, true).await;
@@ -182,6 +186,7 @@ impl EventHandler for Handler {
                     commands::rm_remind::register(),
                     commands::chat::register(),
                     commands::image::register(),
+                    commands::info::register(),
                 ],
             )
             .await;

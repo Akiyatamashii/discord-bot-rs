@@ -13,6 +13,7 @@ use crate::Reminder;
 
 const SYSTEM_OUTPUT: &str = "[SYSTEM_OUTPUT]:";
 const ERROR_OUTPUT: &str = "[ERROR]:";
+const INFO_PATH: &str = "./info/";
 
 pub fn system_output() -> ColoredString {
     SYSTEM_OUTPUT.blue()
@@ -25,6 +26,10 @@ pub fn error_output() -> ColoredString {
 pub fn openai_config() -> OpenAIConfig {
     let api = env::var("API_KEY").unwrap();
     OpenAIConfig::new().with_api_key(api)
+}
+
+pub fn info_path() -> String {
+    INFO_PATH.to_string()
 }
 
 pub async fn interaction_response(
