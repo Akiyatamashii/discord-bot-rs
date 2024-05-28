@@ -15,7 +15,8 @@ use tokio::sync::{Notify, RwLock};
 mod commands;
 mod modules;
 use modules::func::{
-    check_permission, error_output, interaction_response, load_reminders_from_file, system_output,
+    check_permission, ensure_guild_id_file_exists, error_output, interaction_response,
+    load_reminders_from_file, register_commands, register_commands_guild_ids, system_output,
 };
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
@@ -30,15 +31,20 @@ struct Reminder {
 #[derive(Clone)]
 struct Handler {
     //處理器結構
-    reminders: Arc<RwLock<HashMap<ChannelId, Vec<Reminder>>>>,
+    reminders: Arc<RwLock<HashMap<GuildId, HashMap<ChannelId, Vec<Reminder>>>>>,
     trigger_notify: Arc<Notify>,
 }
 
 #[async_trait]
 impl EventHandler for Handler {
-    async fn message(&self, _ctx: Context, msg: Message) {
+    async fn message(&self, ctx: Context, msg: Message) {
         if msg.author.bot {
             return;
+        }
+        if msg.content.starts_with("!register") {
+            let guild_id = msg.guild_id.unwrap();
+            register_commands(&ctx, &guild_id, false).await;
+            msg.delete(&ctx.http).await.unwrap();
         }
     }
 
@@ -63,7 +69,9 @@ impl EventHandler for Handler {
                     true
                 }
                 "look" => {
-                    let msg = commands::look::run();
+                    let guild_id = command.guild_id.unwrap();
+                    let channel_id = command.channel_id;
+                    let msg = commands::look::run(guild_id, channel_id);
                     interaction_response(&ctx, &command, msg, true).await;
                     true
                 }
@@ -72,7 +80,7 @@ impl EventHandler for Handler {
                     match commands::chat::run(&ctx, &command, &command.data.options()).await {
                         Ok(msg) => {
                             if msg != "" {
-                                interaction_response(&ctx, &command, msg, false).await;
+                                interaction_response(&ctx, &command, msg, true).await;
                             }
                             true
                         }
@@ -91,7 +99,7 @@ impl EventHandler for Handler {
                     match commands::image::run(&ctx, &command, &command.data.options()).await {
                         Ok(msg) => {
                             if msg != "" {
-                                interaction_response(&ctx, &command, msg, false).await;
+                                interaction_response(&ctx, &command, msg, true).await;
                             }
                             true
                         }
@@ -111,16 +119,18 @@ impl EventHandler for Handler {
                         return;
                     }
                     let channel_id = command.channel_id;
+                    let guild_id = command.guild_id.unwrap();
                     match commands::remind::run(
                         &command.data.options(),
                         self.reminders.clone(),
                         channel_id,
+                        guild_id,
                         &self.trigger_notify,
                     )
                     .await
                     {
                         Ok(msg) => {
-                            interaction_response(&ctx, &command, msg, false).await;
+                            interaction_response(&ctx, &command, msg, true).await;
                             true
                         }
                         Err(err) => {
@@ -139,15 +149,17 @@ impl EventHandler for Handler {
                         return;
                     }
                     let channel_id = command.channel_id;
+                    let guild_id = command.guild_id.unwrap();
                     match commands::rm_remind::run(
                         &command.data.options(),
                         self.reminders.clone(),
                         channel_id,
+                        guild_id,
                     )
                     .await
                     {
                         Ok(msg) => {
-                            interaction_response(&ctx, &command, msg, false).await;
+                            interaction_response(&ctx, &command, msg, true).await;
                             true
                         }
                         Err(err) => {
@@ -168,47 +180,10 @@ impl EventHandler for Handler {
 
     async fn ready(&self, ctx: Context, ready: Ready) {
         ctx.set_activity(Some(ActivityData::playing("記憶大賽....")));
+        let file_path = "guild_id.txt";
+        ensure_guild_id_file_exists(file_path).unwrap();
 
-        let guild_id = GuildId::new(
-            env::var("GUILD_ID")
-                .expect("Expected GUILD_ID in environment")
-                .parse()
-                .expect("GUILD_ID must be an integer"),
-        );
-
-        let command = guild_id
-            .set_commands(
-                &ctx,
-                vec![
-                    commands::ping::register(),
-                    commands::remind::register(),
-                    commands::look::register(),
-                    commands::rm_remind::register(),
-                    commands::chat::register(),
-                    commands::image::register(),
-                    commands::info::register(),
-                ],
-            )
-            .await;
-        match command {
-            Ok(cmds) => {
-                let command_names: Vec<_> = cmds.iter().map(|cmd| &cmd.name).collect();
-                println!(
-                    "{} {} {:?}",
-                    system_output(),
-                    "Created slash commands: ".green(),
-                    command_names
-                );
-            }
-            Err(err) => {
-                println!(
-                    "{} {} {:?}",
-                    error_output(),
-                    "Failed to create commands:".red(),
-                    err
-                );
-            }
-        }
+        register_commands_guild_ids(&ctx).await;
 
         println!(
             "{} {} {}",

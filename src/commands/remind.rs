@@ -2,7 +2,7 @@ use std::{collections::HashMap, error::Error, sync::Arc};
 
 use chrono::{NaiveTime, Weekday};
 use serenity::{
-    all::ResolvedValue,
+    all::{GuildId, ResolvedValue},
     builder::{CreateCommand, CreateCommandOption},
     model::{
         application::{CommandOptionType, ResolvedOption},
@@ -41,8 +41,9 @@ pub fn register() -> CreateCommand {
 
 pub async fn run<'a>(
     options: &'a [ResolvedOption<'a>],
-    reminder: Arc<RwLock<HashMap<ChannelId, Vec<Reminder>>>>,
+    reminder: Arc<RwLock<HashMap<GuildId, HashMap<ChannelId, Vec<Reminder>>>>>,
     channel_id: ChannelId,
+    guild_id: GuildId,
     notify: &Arc<Notify>,
 ) -> Result<String, Box<dyn Error + Send + Sync>> {
     let weekdays = options
@@ -106,15 +107,14 @@ pub async fn run<'a>(
 
     {
         let mut reminders = reminder.write().await;
-        reminders
-            .entry(channel_id)
-            .or_insert_with(Vec::new)
-            .push(Reminder {
-                weekdays,
-                time,
-                message: reminder_message,
-                last_executed: None,
-            });
+        let guild_reminder = reminders.entry(guild_id).or_insert_with(HashMap::new);
+        let channel_reminder = guild_reminder.entry(channel_id).or_insert_with(Vec::new);
+        channel_reminder.push(Reminder {
+            weekdays,
+            time,
+            message: reminder_message,
+            last_executed: None,
+        });
         save_reminders_to_file(&*reminders).expect("Failed to save reminders");
     }
 

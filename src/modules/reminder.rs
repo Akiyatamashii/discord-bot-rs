@@ -4,7 +4,7 @@ use chrono::{Datelike, NaiveTime, Timelike, Utc};
 use chrono_tz::Tz;
 use colored::Colorize;
 use once_cell::sync::Lazy;
-use serenity::all::{ChannelId, Http};
+use serenity::all::{ChannelId, GuildId, Http};
 use std::{collections::HashMap, sync::Arc};
 use tokio::sync::Notify;
 use tokio::{
@@ -34,7 +34,7 @@ impl ReminderStore {
 
 pub async fn remind_task(
     http: Arc<Http>,
-    reminders: Arc<RwLock<HashMap<ChannelId, Vec<Reminder>>>>,
+    reminders: Arc<RwLock<HashMap<GuildId, HashMap<ChannelId, Vec<Reminder>>>>>,
     notify: Arc<Notify>,
 ) {
     println!(
@@ -79,7 +79,7 @@ pub async fn remind_task(
 }
 
 async fn process_reminders(
-    reminders: &Arc<RwLock<HashMap<ChannelId, Vec<Reminder>>>>,
+    reminders: &Arc<RwLock<HashMap<GuildId, HashMap<ChannelId, Vec<Reminder>>>>>,
     reminder_store: &Arc<ReminderStore>,
 ) {
     let now = Utc::now().with_timezone(&*TW);
@@ -87,21 +87,23 @@ async fn process_reminders(
     let target_time = now + chrono::Duration::minutes(30);
     let handler_reminder = Arc::clone(&reminders);
     {
-        let mut reminders_map = handler_reminder.write().await;
-        for (channel_id, reminders) in reminders_map.iter_mut() {
-            for reminder in reminders.iter_mut() {
-                if reminder.weekdays.contains(&now.weekday())
-                    && reminder.time > now.time()
-                    && reminder.time <= target_time.time()
-                    && reminder.last_executed != Some(now.date_naive())
-                {
-                    reminder.last_executed = Some(now.date_naive());
-                    let mut reminder_in_30min = reminder_store.reminders_30_min.write().await;
-                    reminder_in_30min.push((channel_id.clone(), reminder.clone()));
+        let mut guild_reminders_map = handler_reminder.write().await;
+        for (_guild_id, reminders_map) in guild_reminders_map.iter_mut() {
+            for (channel_id, reminders) in reminders_map.iter_mut() {
+                for reminder in reminders.iter_mut() {
+                    if reminder.weekdays.contains(&now.weekday())
+                        && reminder.time > now.time()
+                        && reminder.time <= target_time.time()
+                        && reminder.last_executed != Some(now.date_naive())
+                    {
+                        reminder.last_executed = Some(now.date_naive());
+                        let mut reminder_in_30min = reminder_store.reminders_30_min.write().await;
+                        reminder_in_30min.push((channel_id.clone(), reminder.clone()));
+                    }
                 }
             }
         }
-        save_reminders_to_file(&*reminders_map).expect("Failed to save reminders");
+        save_reminders_to_file(&*guild_reminders_map).expect("Failed to save reminders");
     }
 }
 
