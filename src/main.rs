@@ -3,6 +3,7 @@ use std::{collections::HashMap, env, sync::Arc};
 use chrono::{NaiveDate, NaiveTime, Weekday};
 use colored::*;
 use dotenv::dotenv;
+use regex::Regex;
 use serde::{Deserialize, Serialize};
 use serenity::{
     all::{ActivityData, ChannelId, GuildId, Interaction},
@@ -10,13 +11,15 @@ use serenity::{
     model::{channel::Message, gateway::Ready},
     prelude::*,
 };
+use songbird::SerenityInit;
 use tokio::sync::{Notify, RwLock};
 
 mod commands;
 mod modules;
+use modules::bot_process::{interaction_process, prefix_command_process};
 use modules::func::{
-    check_permission, ensure_guild_id_file_exists, error_output, interaction_response,
-    load_reminders_from_file, register_commands, register_commands_guild_ids, system_output,
+    ensure_guild_id_file_exists, error_output, load_reminders_from_file,
+    register_commands_guild_ids, system_output,
 };
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
@@ -28,11 +31,21 @@ struct Reminder {
     last_executed: Option<NaiveDate>, //最後執行時間
 }
 
+#[derive(Default, Debug, Clone)]
+struct MusicInfo {
+    title: String,
+    http: String,
+    watch: Option<String>,
+}
+
 #[derive(Clone)]
 struct Handler {
     //處理器結構
     reminders: Arc<RwLock<HashMap<GuildId, HashMap<ChannelId, Vec<Reminder>>>>>,
+    music_list_temp: Arc<RwLock<HashMap<usize, MusicInfo>>>,
+    music_list: Arc<RwLock<Vec<MusicInfo>>>,
     trigger_notify: Arc<Notify>,
+    prefix: Regex,
 }
 
 #[async_trait]
@@ -41,10 +54,9 @@ impl EventHandler for Handler {
         if msg.author.bot {
             return;
         }
-        if msg.content.starts_with("!register") {
-            let guild_id = msg.guild_id.unwrap();
-            register_commands(&ctx, &guild_id, false).await;
-            msg.delete(&ctx.http).await.unwrap();
+
+        if self.prefix.is_match(&msg.content) {
+            prefix_command_process(&ctx, &msg).await
         }
     }
 
@@ -58,123 +70,10 @@ impl EventHandler for Handler {
                 ",from:".green(),
                 command.user.name.yellow().bold()
             );
-            let _ = match command.data.name.as_str() {
-                "ping" => {
-                    let msg = commands::ping::run(&command.data.options());
-                    interaction_response(&ctx, &command, msg, true).await;
-                    true
-                }
-                "info" => {
-                    commands::info::run(&ctx, &command, &command.data.options()).await;
-                    true
-                }
-                "look" => {
-                    let guild_id = command.guild_id.unwrap();
-                    let channel_id = command.channel_id;
-                    let msg = commands::look::run(guild_id, channel_id);
-                    interaction_response(&ctx, &command, msg, true).await;
-                    true
-                }
 
-                "chat" => {
-                    match commands::chat::run(&ctx, &command, &command.data.options()).await {
-                        Ok(msg) => {
-                            if msg != "" {
-                                interaction_response(&ctx, &command, msg, true).await;
-                            }
-                            true
-                        }
-                        Err(err) => {
-                            println!(
-                                "{} {} {}",
-                                error_output(),
-                                "OpenAI mission filed:".red(),
-                                err
-                            );
-                            false
-                        }
-                    }
-                }
-                "image" => {
-                    match commands::image::run(&ctx, &command, &command.data.options()).await {
-                        Ok(msg) => {
-                            if msg != "" {
-                                interaction_response(&ctx, &command, msg, true).await;
-                            }
-                            true
-                        }
-                        Err(err) => {
-                            println!(
-                                "{} {} {}",
-                                error_output(),
-                                "OpenAI mission filed:".red(),
-                                err
-                            );
-                            false
-                        }
-                    }
-                }
-                "remind" => {
-                    if !check_permission(&ctx, &command).await {
-                        return;
-                    }
-                    let channel_id = command.channel_id;
-                    let guild_id = command.guild_id.unwrap();
-                    match commands::remind::run(
-                        &command.data.options(),
-                        self.reminders.clone(),
-                        channel_id,
-                        guild_id,
-                        &self.trigger_notify,
-                    )
-                    .await
-                    {
-                        Ok(msg) => {
-                            interaction_response(&ctx, &command, msg, true).await;
-                            true
-                        }
-                        Err(err) => {
-                            println!(
-                                "{} {} {}",
-                                error_output(),
-                                "Failed to set reminder:".red(),
-                                err
-                            );
-                            false
-                        }
-                    }
-                }
-                "rm_remind" => {
-                    if !check_permission(&ctx, &command).await {
-                        return;
-                    }
-                    let channel_id = command.channel_id;
-                    let guild_id = command.guild_id.unwrap();
-                    match commands::rm_remind::run(
-                        &command.data.options(),
-                        self.reminders.clone(),
-                        channel_id,
-                        guild_id,
-                    )
-                    .await
-                    {
-                        Ok(msg) => {
-                            interaction_response(&ctx, &command, msg, true).await;
-                            true
-                        }
-                        Err(err) => {
-                            println!(
-                                "{} {} {}",
-                                error_output(),
-                                "Failed to remove reminder:".red(),
-                                err
-                            );
-                            false
-                        }
-                    }
-                }
-                _ => false,
-            };
+            let ctx = Arc::new(ctx);
+
+            interaction_process(self, &ctx, &command).await;
         }
     }
 
@@ -199,20 +98,31 @@ async fn main() {
     dotenv().ok();
 
     let token = env::var("TOKEN").expect("missing token");
-    let intents = GatewayIntents::GUILD_MESSAGES | GatewayIntents::MESSAGE_CONTENT;
+    let intents = GatewayIntents::GUILD_MESSAGES
+        | GatewayIntents::MESSAGE_CONTENT
+        | GatewayIntents::GUILDS
+        | GatewayIntents::GUILD_VOICE_STATES;
 
     let reminders = match load_reminders_from_file() {
         Ok(r) => Arc::new(RwLock::new(r)),
         Err(_) => Arc::new(RwLock::new(HashMap::new())),
     };
+    let music_list: Arc<RwLock<Vec<MusicInfo>>> = Arc::new(RwLock::new(Vec::new()));
+    let music_list_temp: Arc<RwLock<HashMap<usize, MusicInfo>>> =
+        Arc::new(RwLock::new(HashMap::new()));
+    let prefix = Regex::new(r"^![A-Za-z]").unwrap();
 
     let handler = Handler {
         reminders: Arc::clone(&reminders),
+        music_list: Arc::clone(&music_list),
+        music_list_temp: Arc::clone(&music_list_temp),
         trigger_notify: Arc::new(Notify::new()),
+        prefix,
     };
 
     let mut client = Client::builder(&token, intents)
         .event_handler(handler.clone())
+        .register_songbird()
         .await
         .expect("Create client error");
 
