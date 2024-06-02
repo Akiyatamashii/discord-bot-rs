@@ -1,43 +1,39 @@
-use std::{collections::HashMap, error::Error};
+use std::error::Error;
 
-use serenity::all::{Context, Message, UserId, VoiceState};
+use serenity::all::{CommandInteraction, Context, CreateCommand};
 
-pub async fn run(ctx: &Context, msg: &Message) -> Result<String, Box<dyn Error + Send + Sync>> {
-    let guild_id = msg.guild_id.unwrap();
+use crate::modules::func::{error_output, voice_output};
 
+pub async fn run(
+    ctx: &Context,
+    command: &CommandInteraction,
+) -> Result<String, Box<dyn Error + Send + Sync>> {
+    let guild_id = command.guild_id.ok_or("GuildID not found")?;
     let manager = songbird::get(ctx)
         .await
         .ok_or("Failed to retrieve songbird manager.")?;
 
     if let Some(call) = manager.get(guild_id) {
         let mut call_lock = call.lock().await;
-        if call_lock.leave().await.is_ok() {
-            let guild_id = match msg.guild_id {
-                Some(gid) => gid,
-                None => return Ok("This command can only be used in a guild.".to_string()),
-            };
-
-            let user_id = msg.author.id;
-
-            let channel_id = {
-                let guild = guild_id
-                    .to_guild_cached(ctx)
-                    .ok_or("Failed to retrieve guild from cache.")?;
-                let voice_state: &HashMap<UserId, VoiceState> = &guild.voice_states;
-                voice_state
-                    .get(&user_id)
-                    .and_then(|voice_state| voice_state.channel_id)
-                    .ok_or("You must be in a voice channel to use this command!")?
-            };
-            Ok(format!(
-                "Left the {} channel successfully.",
-                channel_id.name(ctx).await.unwrap()
-            )
-            .to_string())
+        if let Some(_bot_channel) = call_lock.current_channel() {
+            match call_lock.leave().await {
+                Ok(_) => {
+                    println!("{} Leave channel success", voice_output(),);
+                    return Ok("機器人已離開頻道".to_string());
+                }
+                Err(err) => {
+                    println!("{} Failed to leave channel: {}", error_output(), err);
+                    return Ok("機器人離開頻道失敗".to_string());
+                }
+            }
         } else {
-            Ok("Failed to leave the voice channel.".to_string())
+            return Ok("機器人不在語音頻道中".to_string());
         }
     } else {
-        Ok("Bot is not in a voice channel.".to_string())
+        return Ok("機器人不在語音頻道中".to_string());
     }
+}
+
+pub fn register() -> CreateCommand {
+    CreateCommand::new("leave").description("讓機器人離開語音頻道")
 }

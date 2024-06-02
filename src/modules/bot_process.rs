@@ -1,33 +1,12 @@
 use colored::Colorize;
 use serenity::all::{CommandInteraction, Context, Message};
 
-use crate::{
-    commands,
-    modules::func::{error_output, voice_output},
-    Handler,
-};
+use crate::{commands, modules::func::error_output, Handler};
 
 use super::func::{check_permission, interaction_response, register_commands};
-use crate::commands::{join, leave};
 
 pub async fn prefix_command_process(ctx: &Context, msg: &Message) {
     let content = &msg.content;
-
-    if content == "!join" {
-        println!("get command !join");
-        if let Ok(msg) = join::run(ctx, msg).await {
-            println!("{} {}", voice_output(), msg);
-        }
-        msg.delete(&ctx.http).await.unwrap();
-    }
-
-    if content == "!leave" {
-        println!("get command !leave");
-        if let Ok(msg) = leave::run(ctx, msg).await {
-            println!("{} {}", voice_output(), msg);
-        }
-        msg.delete(&ctx.http).await.unwrap();
-    }
 
     if content == "!register" {
         println!("get command !register");
@@ -39,6 +18,16 @@ pub async fn prefix_command_process(ctx: &Context, msg: &Message) {
 
 pub async fn interaction_process(handler: &Handler, ctx: &Context, command: &CommandInteraction) {
     let _ = match command.data.name.as_str() {
+        "join" => {
+            let msg = commands::join::run(&ctx, &command).await.unwrap();
+            interaction_response(&ctx, &command, msg, true).await;
+            true
+        }
+        "leave" => {
+            let msg = commands::leave::run(&ctx, &command).await.unwrap();
+            interaction_response(&ctx, &command, msg, true).await;
+            true
+        }
         "ping" => {
             let msg = commands::ping::run(&command.data.options());
             interaction_response(&ctx, &command, msg, true).await;

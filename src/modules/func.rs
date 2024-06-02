@@ -138,6 +138,8 @@ pub async fn register_commands(ctx: &Context, guild_id: &GuildId, for_guilds: bo
                 commands::music_search::register(),
                 commands::music_select::register(),
                 commands::music_look::register(),
+                commands::join::register(),
+                commands::leave::register(),
             ],
         )
         .await;

@@ -1,90 +1,97 @@
 use std::{collections::HashMap, error::Error};
 
-use serenity::all::{Context, Message, UserId, VoiceState};
+use serenity::all::{CommandInteraction, Context, CreateCommand, UserId, VoiceState};
 
-pub async fn run(ctx: &Context, msg: &Message) -> Result<String, Box<dyn Error + Send + Sync>> {
-    let guild_id = match msg.guild_id {
-        Some(gid) => gid,
-        None => return Ok("This command can only be used in a guild.".to_string()),
-    };
+use crate::modules::func::{error_output, voice_output};
 
-    let user_id = msg.author.id;
-
-    let channel_id = {
-        let guild = guild_id
-            .to_guild_cached(ctx)
-            .ok_or("Failed to retrieve guild from cache.")?;
-        let voice_state: &HashMap<UserId, VoiceState> = &guild.voice_states;
-        voice_state
-            .get(&user_id)
-            .and_then(|voice_state| voice_state.channel_id)
-            .ok_or("You must be in a voice channel to use this command!")?
-    };
+pub async fn run(
+    ctx: &Context,
+    command: &CommandInteraction,
+) -> Result<String, Box<dyn Error + Send + Sync>> {
+    let guild_id = command.guild_id.ok_or("GuildID not found")?;
+    let user_id = command.user.id;
+    let guild = ctx.cache.guild(guild_id).ok_or("Guild not found")?.clone();
+    let voice_state: HashMap<UserId, VoiceState> = guild.voice_states;
+    let channel_id = voice_state.get(&user_id).and_then(|state| state.channel_id);
 
     let manager = songbird::get(ctx)
         .await
         .ok_or("Failed to retrieve songbird manager.")?;
 
-    if let Some(call) = manager.get(guild_id) {
-        let mut call_lock = call.lock().await;
-        if let Some(bot_channel) = call_lock.current_channel() {
-            if bot_channel == channel_id.into() {
-                return Ok("Bot is already in the channel.".to_string());
+    if let Some(channel_id) = channel_id {
+        if let Some(call) = manager.get(guild_id) {
+            let mut call_lock = call.lock().await;
+            if let Some(bot_channel) = call_lock.current_channel() {
+                if bot_channel == channel_id.into() {
+                    return Ok("機器人已經在頻道中".to_string());
+                } else {
+                    match call_lock.join(channel_id).await {
+                        Ok(_) => {
+                            println!(
+                                "{} Change to {} channel success",
+                                voice_output(),
+                                channel_id.name(&ctx.http).await?
+                            );
+                            return Ok("成功切換頻道".to_string());
+                        }
+                        Err(err) => {
+                            println!(
+                                "{} Failed to change to {} channel: {}",
+                                error_output(),
+                                channel_id.name(&ctx.http).await?,
+                                err
+                            );
+                            return Ok("切換頻道失敗".to_string());
+                        }
+                    }
+                }
             } else {
                 match call_lock.join(channel_id).await {
                     Ok(_) => {
-                        return Ok(format!(
-                            "Changed to {} channel successfully.",
-                            channel_id.name(&ctx).await?
-                        )
-                        .to_string());
+                        println!(
+                            "{} Join to {} channel success",
+                            voice_output(),
+                            channel_id.name(&ctx.http).await?
+                        );
+                        return Ok("成功加入頻道".to_string());
                     }
-                    Err(_) => {
-                        return Ok("Failed to change channel.".to_string());
+                    Err(err) => {
+                        println!(
+                            "{} Failed to join to {} channel: {}",
+                            error_output(),
+                            channel_id.name(&ctx.http).await?,
+                            err
+                        );
+                        return Ok("加入頻道失敗".to_string());
                     }
                 }
-            }
+            };
         } else {
             match manager.join(guild_id, channel_id).await {
-                Ok(call) => {
-                    if !call.lock().await.current_channel().is_none() {
-                        return Ok(format!(
-                            "Join to {} channel successfully.",
-                            channel_id.name(&ctx).await?
-                        )
-                        .to_string());
-                    } else {
-                        return Ok(format!(
-                            "Failed to Join {} channel.",
-                            channel_id.name(&ctx).await?
-                        )
-                        .to_string());
-                    }
-                }
-                Err(_) => {
-                    return Ok("Failed to join channel.".to_string());
-                }
-            }
-        }
-    } else {
-        match manager.join(guild_id, channel_id).await {
-            Ok(call) => {
-                if !call.lock().await.current_channel().is_none() {
-                    return Ok(format!(
-                        "Join to {} channel successfully.",
-                        channel_id.name(&ctx).await?
-                    )
-                    .to_string());
-                } else {
-                    return Ok(
-                        format!("Failed to Join {} channel.", channel_id.name(&ctx).await?)
-                            .to_string(),
+                Ok(_) => {
+                    println!(
+                        "{} Join to {} channel success",
+                        voice_output(),
+                        channel_id.name(&ctx.http).await?
                     );
+                    return Ok("成功加入頻道".to_string());
+                }
+                Err(err) => {
+                    println!(
+                        "{} Failed to join to {} channel: {}",
+                        error_output(),
+                        channel_id.name(&ctx.http).await?,
+                        err
+                    );
+                    return Ok("加入頻道失敗".to_string());
                 }
             }
-            Err(_) => {
-                return Ok("Failed to join channel.".to_string());
-            }
-        }
-    }
+        };
+    } else {
+        return Ok("請先加入一個語音頻道".to_string());
+    };
+}
+
+pub fn register() -> CreateCommand {
+    CreateCommand::new("join").description("加入機器人到當前語音頻道")
 }
