@@ -1,15 +1,12 @@
-use std::sync::Arc;
-
 use serenity::all::CreateCommand;
-use tokio::sync::RwLock;
 
-use crate::MusicInfo;
+use crate::MusicList;
 
 pub fn register() -> CreateCommand {
     CreateCommand::new("music_look").description("查看音樂播放列表")
 }
 
-pub async fn run(music_list: Arc<RwLock<Vec<MusicInfo>>>) -> String {
+pub async fn run(music_list: MusicList) -> String {
     let mut content = String::new();
     if !music_list.read().await.is_empty() {
         content.push_str("V 音樂播放列表 V\n");

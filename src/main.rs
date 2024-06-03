@@ -37,13 +37,16 @@ struct MusicInfo {
     http: String,
     watch: Option<String>,
 }
+type MusicTemp = Arc<RwLock<HashMap<usize, MusicInfo>>>;
+type MusicList = Arc<RwLock<Vec<MusicInfo>>>;
+type Reminders = Arc<RwLock<HashMap<GuildId, HashMap<ChannelId, Vec<Reminder>>>>>;
 
 #[derive(Clone)]
 struct Handler {
     //處理器結構
-    reminders: Arc<RwLock<HashMap<GuildId, HashMap<ChannelId, Vec<Reminder>>>>>,
-    music_list_temp: Arc<RwLock<HashMap<usize, MusicInfo>>>,
-    music_list: Arc<RwLock<Vec<MusicInfo>>>,
+    reminders: Reminders,
+    music_list_temp: MusicTemp,
+    music_list: MusicList,
     trigger_notify: Arc<Notify>,
     prefix: Regex,
 }
@@ -107,9 +110,8 @@ async fn main() {
         Ok(r) => Arc::new(RwLock::new(r)),
         Err(_) => Arc::new(RwLock::new(HashMap::new())),
     };
-    let music_list: Arc<RwLock<Vec<MusicInfo>>> = Arc::new(RwLock::new(Vec::new()));
-    let music_list_temp: Arc<RwLock<HashMap<usize, MusicInfo>>> =
-        Arc::new(RwLock::new(HashMap::new()));
+    let music_list: MusicList = Arc::new(RwLock::new(Vec::new()));
+    let music_list_temp: MusicTemp = Arc::new(RwLock::new(HashMap::new()));
     let prefix = Regex::new(r"^![A-Za-z]").unwrap();
 
     let handler = Handler {

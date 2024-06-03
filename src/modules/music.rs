@@ -1,14 +1,13 @@
-use std::{collections::HashMap, process::Command, sync::Arc};
+use std::{collections::HashMap, process::Command};
 
 use regex::Regex;
 use reqwest;
 use serde_json::Value;
-use tokio::sync::RwLock;
 use urlencoding::encode;
 
-use crate::MusicInfo;
+use crate::{MusicInfo, MusicTemp};
 
-pub async fn catch(query: &str, music_list_temp: Arc<RwLock<HashMap<usize, MusicInfo>>>) {
+pub async fn catch(query: &str, music_list_temp: MusicTemp) {
     let encoded_query = encode(query); // 對查詢字串進行 URL 編碼
     let url = format!(
         "https://www.youtube.com/results?search_query={}",

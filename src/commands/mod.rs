@@ -6,7 +6,7 @@ pub mod join;
 pub mod look;
 pub mod music_look;
 pub mod music_pause;
-pub mod music_play;
+pub mod play;
 pub mod music_search;
 pub mod music_select;
 pub mod music_skip;

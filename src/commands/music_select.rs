@@ -1,12 +1,9 @@
-use std::{collections::HashMap, sync::Arc};
-
 use serenity::all::{
     CommandOptionType, CreateCommand, CreateCommandOption, ResolvedOption, ResolvedValue,
 };
-use tokio::sync::RwLock;
 
 use crate::modules::music::get_audio_url;
-use crate::MusicInfo;
+use crate::{MusicInfo, MusicList, MusicTemp};
 
 pub fn register() -> CreateCommand {
     CreateCommand::new("music_select")
@@ -18,8 +15,8 @@ pub fn register() -> CreateCommand {
 }
 
 pub async fn run<'a>(
-    music_list_temp: Arc<RwLock<HashMap<usize, MusicInfo>>>,
-    music_list: Arc<RwLock<Vec<MusicInfo>>>,
+    music_list_temp: MusicTemp,
+    music_list: MusicList,
     option: &'a [ResolvedOption<'a>],
 ) -> Result<String, Box<dyn std::error::Error + Send + Sync>> {
     let index = option.iter().find(|opt| opt.name == "index");
@@ -35,7 +32,8 @@ pub async fn run<'a>(
                 let mut temp_music = temp.get(&i).unwrap().clone();
                 temp_music.watch = get_audio_url(&temp_music.http).await;
                 choice_music = temp_music;
-                temp.clear()
+                temp.clear();
+                println!("{:?}", choice_music.watch);
             }
             let mut music = music_list.write().await;
             music.push(choice_music);

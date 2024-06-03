@@ -1,15 +1,10 @@
-use std::collections::HashMap;
-use std::sync::Arc;
-
 use serenity::{
     all::{CommandOptionType, GuildId, ResolvedOption, ResolvedValue},
     builder::{CreateCommand, CreateCommandOption},
     model::id::ChannelId,
 };
-use tokio::sync::RwLock;
 
-use crate::modules::func::save_reminders_to_file;
-use crate::Reminder;
+use crate::{modules::func::save_reminders_to_file, Reminders};
 
 pub fn register() -> CreateCommand {
     CreateCommand::new("rm_remind")
@@ -31,7 +26,7 @@ pub fn register() -> CreateCommand {
 
 pub async fn run<'a>(
     options: &'a [ResolvedOption<'a>],
-    reminders: Arc<RwLock<HashMap<GuildId, HashMap<ChannelId, Vec<Reminder>>>>>,
+    reminders: Reminders,
     channel_id: ChannelId,
     guild_id: GuildId,
 ) -> Result<String, Box<dyn std::error::Error + Send + Sync>> {

@@ -1,14 +1,13 @@
-use std::{collections::HashMap, sync::Arc};
+use std::sync::Arc;
 
 use serenity::all::{
     CommandInteraction, CommandOptionType, Context, CreateCommand, CreateCommandOption,
     CreateInteractionResponse, CreateInteractionResponseMessage, ResolvedOption, ResolvedValue,
 };
-use tokio::sync::RwLock;
 
 use crate::{
     modules::music::{catch, get_video_info},
-    MusicInfo,
+    MusicList, MusicTemp,
 };
 
 pub fn register() -> CreateCommand {
@@ -27,8 +26,8 @@ pub fn register() -> CreateCommand {
 pub async fn run<'a>(
     ctx: &Context,
     command: &CommandInteraction,
-    music_list_temp: Arc<RwLock<HashMap<usize, MusicInfo>>>,
-    music_list: Arc<RwLock<Vec<MusicInfo>>>,
+    music_list_temp: MusicTemp,
+    music_list: MusicList,
     option: &'a [ResolvedOption<'a>],
 ) -> Result<String, Box<dyn std::error::Error + Send + Sync>> {
     let query = option.iter().find(|opt| opt.name == "query_or_url");

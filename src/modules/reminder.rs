@@ -1,11 +1,11 @@
 use crate::modules::func::{error_output, save_reminders_to_file, system_output};
-use crate::Reminder;
+use crate::{Reminder, Reminders};
 use chrono::{Datelike, NaiveTime, Timelike, Utc};
 use chrono_tz::Tz;
 use colored::Colorize;
 use once_cell::sync::Lazy;
-use serenity::all::{ChannelId, GuildId, Http};
-use std::{collections::HashMap, sync::Arc};
+use serenity::all::{ChannelId, Http};
+use std::sync::Arc;
 use tokio::sync::Notify;
 use tokio::{
     sync::RwLock,
@@ -32,11 +32,7 @@ impl ReminderStore {
     }
 }
 
-pub async fn remind_task(
-    http: Arc<Http>,
-    reminders: Arc<RwLock<HashMap<GuildId, HashMap<ChannelId, Vec<Reminder>>>>>,
-    notify: Arc<Notify>,
-) {
+pub async fn remind_task(http: Arc<Http>, reminders: Reminders, notify: Arc<Notify>) {
     println!(
         "{} {}",
         system_output(),
@@ -78,10 +74,7 @@ pub async fn remind_task(
     }
 }
 
-async fn process_reminders(
-    reminders: &Arc<RwLock<HashMap<GuildId, HashMap<ChannelId, Vec<Reminder>>>>>,
-    reminder_store: &Arc<ReminderStore>,
-) {
+async fn process_reminders(reminders: &Reminders, reminder_store: &Arc<ReminderStore>) {
     let now = Utc::now().with_timezone(&*TW);
     // println!("start process reminder check:{}", now.time());
     let target_time = now + chrono::Duration::minutes(30);

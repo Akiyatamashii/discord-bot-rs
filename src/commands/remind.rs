@@ -9,10 +9,10 @@ use serenity::{
         id::ChannelId,
     },
 };
-use tokio::sync::{Notify, RwLock};
+use tokio::sync::Notify;
 
-use crate::modules::func::save_reminders_to_file;
 use crate::Reminder;
+use crate::{modules::func::save_reminders_to_file, Reminders};
 
 pub fn register() -> CreateCommand {
     CreateCommand::new("remind")
@@ -41,7 +41,7 @@ pub fn register() -> CreateCommand {
 
 pub async fn run<'a>(
     options: &'a [ResolvedOption<'a>],
-    reminder: Arc<RwLock<HashMap<GuildId, HashMap<ChannelId, Vec<Reminder>>>>>,
+    reminder: Reminders,
     channel_id: ChannelId,
     guild_id: GuildId,
     notify: &Arc<Notify>,
