@@ -158,14 +158,18 @@ pub async fn run<'a>(
                 del(ctx, command, index).await
             } else {
                 let content = String::from(">> 請輸入索引");
-                let data = CreateInteractionResponseMessage::new().content(content);
+                let data = CreateInteractionResponseMessage::new()
+                    .content(content)
+                    .ephemeral(true);
                 let builder = CreateInteractionResponse::Message(data);
                 command.create_response(&ctx.http, builder).await.ok();
             }
         }
         _ => {
             let content = String::from(">> 未知的指令類型");
-            let data = CreateInteractionResponseMessage::new().content(content);
+            let data = CreateInteractionResponseMessage::new()
+                .content(content)
+                .ephemeral(true);
             let builder = CreateInteractionResponse::Message(data);
             command.create_response(&ctx.http, builder).await.ok();
         }
@@ -207,7 +211,9 @@ async fn look(ctx: &Context, command: &CommandInteraction) {
         content
     };
 
-    let data = CreateInteractionResponseMessage::new().content(content);
+    let data = CreateInteractionResponseMessage::new()
+        .content(content)
+        .ephemeral(true);
     let builder = CreateInteractionResponse::Message(data);
     command.create_response(&ctx.http, builder).await.ok();
 }
@@ -223,12 +229,16 @@ async fn add(ctx: &Context, command: &CommandInteraction, cash: Cash) {
     cash_list.push(cash);
     if let Err(e) = save_cash_data(&cash_lists) {
         let content = format!(">> 儲存資料時發生錯誤: {}", e);
-        let data = CreateInteractionResponseMessage::new().content(content);
+        let data = CreateInteractionResponseMessage::new()
+            .content(content)
+            .ephemeral(true);
         let builder = CreateInteractionResponse::Message(data);
         command.create_response(&ctx.http, builder).await.unwrap();
     } else {
         let content = String::from(">> 已加入欠債");
-        let data = CreateInteractionResponseMessage::new().content(content);
+        let data = CreateInteractionResponseMessage::new()
+            .content(content)
+            .ephemeral(true);
         let builder = CreateInteractionResponse::Message(data);
         command.create_response(&ctx.http, builder).await.unwrap();
     }
@@ -239,7 +249,9 @@ async fn del(ctx: &Context, command: &CommandInteraction, index: usize) {
         Some(cash_lists) => cash_lists,
         None => {
             let content = String::from(">> 沒有可刪除的債務");
-            let data = CreateInteractionResponseMessage::new().content(content);
+            let data = CreateInteractionResponseMessage::new()
+                .content(content)
+                .ephemeral(true);
             let builder = CreateInteractionResponse::Message(data);
             command.create_response(&ctx.http, builder).await.ok();
             return;
@@ -250,7 +262,9 @@ async fn del(ctx: &Context, command: &CommandInteraction, index: usize) {
     if let Some(cash_list) = cash_lists.get_mut(&guild_id) {
         if cash_list[index - 1].creator != command.user.id {
             let content = String::from(">> 你沒有刪除此債務的權力");
-            let data = CreateInteractionResponseMessage::new().content(content);
+            let data = CreateInteractionResponseMessage::new()
+                .content(content)
+                .ephemeral(true);
             let builder = CreateInteractionResponse::Message(data);
             command.create_response(&ctx.http, builder).await.unwrap();
             return;
@@ -259,24 +273,32 @@ async fn del(ctx: &Context, command: &CommandInteraction, index: usize) {
             cash_list.remove(index - 1);
             if let Err(e) = save_cash_data(&cash_lists) {
                 let content = format!(">> 儲存資料時發生錯誤: {}", e);
-                let data = CreateInteractionResponseMessage::new().content(content);
+                let data = CreateInteractionResponseMessage::new()
+                    .content(content)
+                    .ephemeral(true);
                 let builder = CreateInteractionResponse::Message(data);
                 command.create_response(&ctx.http, builder).await.unwrap();
             } else {
                 let content = String::from(">> 已刪除所選債務");
-                let data = CreateInteractionResponseMessage::new().content(content);
+                let data = CreateInteractionResponseMessage::new()
+                    .content(content)
+                    .ephemeral(true);
                 let builder = CreateInteractionResponse::Message(data);
                 command.create_response(&ctx.http, builder).await.ok();
             }
         } else {
             let content = String::from(">> 索引超出範圍");
-            let data = CreateInteractionResponseMessage::new().content(content);
+            let data = CreateInteractionResponseMessage::new()
+                .content(content)
+                .ephemeral(true);
             let builder = CreateInteractionResponse::Message(data);
             command.create_response(&ctx.http, builder).await.ok();
         }
     } else {
         let content = String::from(">> 沒有可刪除的債務");
-        let data = CreateInteractionResponseMessage::new().content(content);
+        let data = CreateInteractionResponseMessage::new()
+            .content(content)
+            .ephemeral(true);
         let builder = CreateInteractionResponse::Message(data);
         command.create_response(&ctx.http, builder).await.ok();
     }
