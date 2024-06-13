@@ -12,6 +12,7 @@ use serenity::all::{
     ResolvedValue, UserId,
 };
 
+// cash
 #[derive(Deserialize, Serialize)]
 struct Cash {
     creator: UserId,
