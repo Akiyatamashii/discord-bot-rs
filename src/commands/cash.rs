@@ -9,11 +9,12 @@ use serde::{Deserialize, Serialize};
 use serenity::all::{
     CommandInteraction, CommandOptionType, Context, CreateCommand, CreateCommandOption,
     CreateInteractionResponse, CreateInteractionResponseMessage, GuildId, ResolvedOption,
-    ResolvedValue,
+    ResolvedValue, UserId,
 };
 
 #[derive(Deserialize, Serialize)]
 struct Cash {
+    creator: UserId,
     debtor: String,
     creditor: String,
     debt: usize,
@@ -141,7 +142,9 @@ pub async fn run<'a>(
     match command_type {
         "look" => look(ctx, command).await,
         "add" => {
+            let creator = command.user.id;
             let cash = Cash {
+                creator,
                 debtor,
                 creditor,
                 debt,
@@ -160,7 +163,7 @@ pub async fn run<'a>(
             }
         }
         _ => {
-            let content = String::from("未知的指令類型");
+            let content = String::from(">> 未知的指令類型");
             let data = CreateInteractionResponseMessage::new().content(content);
             let builder = CreateInteractionResponse::Message(data);
             command.create_response(&ctx.http, builder).await.ok();
@@ -218,12 +221,12 @@ async fn add(ctx: &Context, command: &CommandInteraction, cash: Cash) {
     let cash_list = cash_lists.entry(guild_id).or_insert(Vec::new());
     cash_list.push(cash);
     if let Err(e) = save_cash_data(&cash_lists) {
-        let content = format!("儲存資料時發生錯誤: {}", e);
+        let content = format!(">> 儲存資料時發生錯誤: {}", e);
         let data = CreateInteractionResponseMessage::new().content(content);
         let builder = CreateInteractionResponse::Message(data);
         command.create_response(&ctx.http, builder).await.unwrap();
     } else {
-        let content = String::from("已加入欠債");
+        let content = String::from(">> 已加入欠債");
         let data = CreateInteractionResponseMessage::new().content(content);
         let builder = CreateInteractionResponse::Message(data);
         command.create_response(&ctx.http, builder).await.unwrap();
@@ -234,7 +237,7 @@ async fn del(ctx: &Context, command: &CommandInteraction, index: usize) {
     let mut cash_lists = match load_cash_data().ok() {
         Some(cash_lists) => cash_lists,
         None => {
-            let content = String::from("沒有可刪除的債務");
+            let content = String::from(">> 沒有可刪除的債務");
             let data = CreateInteractionResponseMessage::new().content(content);
             let builder = CreateInteractionResponse::Message(data);
             command.create_response(&ctx.http, builder).await.ok();
@@ -244,27 +247,34 @@ async fn del(ctx: &Context, command: &CommandInteraction, index: usize) {
     let guild_id = command.guild_id.unwrap();
 
     if let Some(cash_list) = cash_lists.get_mut(&guild_id) {
+        if cash_list[index - 1].creator != command.user.id {
+            let content = String::from(">> 你沒有刪除此債務的權力");
+            let data = CreateInteractionResponseMessage::new().content(content);
+            let builder = CreateInteractionResponse::Message(data);
+            command.create_response(&ctx.http, builder).await.unwrap();
+            return;
+        }
         if index > 0 && index <= cash_list.len() {
             cash_list.remove(index - 1);
             if let Err(e) = save_cash_data(&cash_lists) {
-                let content = format!("儲存資料時發生錯誤: {}", e);
+                let content = format!(">> 儲存資料時發生錯誤: {}", e);
                 let data = CreateInteractionResponseMessage::new().content(content);
                 let builder = CreateInteractionResponse::Message(data);
                 command.create_response(&ctx.http, builder).await.unwrap();
             } else {
-                let content = String::from("已刪除所選債務");
+                let content = String::from(">> 已刪除所選債務");
                 let data = CreateInteractionResponseMessage::new().content(content);
                 let builder = CreateInteractionResponse::Message(data);
                 command.create_response(&ctx.http, builder).await.ok();
             }
         } else {
-            let content = String::from("索引超出範圍");
+            let content = String::from(">> 索引超出範圍");
             let data = CreateInteractionResponseMessage::new().content(content);
             let builder = CreateInteractionResponse::Message(data);
             command.create_response(&ctx.http, builder).await.ok();
         }
     } else {
-        let content = String::from("沒有可刪除的債務");
+        let content = String::from(">> 沒有可刪除的債務");
         let data = CreateInteractionResponseMessage::new().content(content);
         let builder = CreateInteractionResponse::Message(data);
         command.create_response(&ctx.http, builder).await.ok();
