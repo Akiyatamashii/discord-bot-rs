@@ -13,3 +13,4 @@ pub mod music_skip;
 pub mod ping;
 pub mod remind;
 pub mod rm_remind;
+pub mod cash;

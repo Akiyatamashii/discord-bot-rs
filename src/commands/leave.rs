@@ -19,18 +19,18 @@ pub async fn run(
             match call_lock.leave().await {
                 Ok(_) => {
                     println!("{} Leave channel success", voice_output(),);
-                    return Ok("機器人已離開頻道".to_string());
+                    Ok("機器人已離開頻道".to_string())
                 }
                 Err(err) => {
                     println!("{} Failed to leave channel: {}", error_output(), err);
-                    return Ok("機器人離開頻道失敗".to_string());
+                    Ok("機器人離開頻道失敗".to_string())
                 }
             }
         } else {
-            return Ok("機器人不在語音頻道中".to_string());
+            Ok("機器人不在語音頻道中".to_string())
         }
     } else {
-        return Ok("機器人不在語音頻道中".to_string());
+        Ok("機器人不在語音頻道中".to_string())
     }
 }
 

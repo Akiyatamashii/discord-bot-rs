@@ -1,4 +1,4 @@
-> ### **提醒器 ( Reminder )**
+> ### **AI生成 ( OpenAI )**
 > 
 > - /chat [message] [public]\(可選\)：與ChatGPT對話，目前尚無記憶能力 (model:ChatGPT-4o)
 >  - message：與ChatGPT對話的訊息

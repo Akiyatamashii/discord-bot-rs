@@ -115,7 +115,7 @@ pub async fn run<'a>(
             message: reminder_message,
             last_executed: None,
         });
-        save_reminders_to_file(&*reminders).expect("Failed to save reminders");
+        save_reminders_to_file(&reminders).expect("Failed to save reminders");
     }
 
     println!("已設定每週提醒");

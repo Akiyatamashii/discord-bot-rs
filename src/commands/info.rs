@@ -10,12 +10,11 @@ use crate::modules::func::{error_output, info_path};
 pub fn register() -> CreateCommand {
     CreateCommand::new("info")
         .description("獲取機器人資訊與指令列表")
-        .add_option(
-            CreateCommandOption::new(CommandOptionType::String, "type", "功能類型選擇")
-                .add_string_choice("reminder", "reminder")
-                .add_string_choice("ai", "ai")
-                .add_string_choice("common", "common"),
-        )
+        .add_option(CreateCommandOption::new(
+            CommandOptionType::String,
+            "type",
+            "功能類型選擇",
+        ))
 }
 
 pub async fn run<'a>(
@@ -34,7 +33,7 @@ pub async fn run<'a>(
         ""
     };
 
-    if info_type == "" {
+    if info_type.is_empty() {
         info(ctx, command).await
     } else {
         info_with_type(ctx, command, info_type).await
@@ -74,7 +73,8 @@ async fn info_with_type(ctx: &Context, command: &CommandInteraction, info_type: 
         .unwrap_or(false);
 
     if !file_exists {
-        let data = CreateInteractionResponseMessage::new().content("參數不存在，請輸入正確的類別代號");
+        let data =
+            CreateInteractionResponseMessage::new().content("參數不存在，請輸入正確的類別代號");
         let builder = CreateInteractionResponse::Message(data);
         if let Err(err) = command.create_response(&ctx.http, builder).await {
             println!("{} Failed to send respond:{}", error_output(), err)

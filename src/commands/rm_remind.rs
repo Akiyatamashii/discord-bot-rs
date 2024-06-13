@@ -64,7 +64,7 @@ pub async fn run<'a>(
                             if guild_reminder.is_empty() {
                                 reminders_lock.remove(&guild_id);
                             }
-                            save_reminders_to_file(&*reminders_lock).unwrap();
+                            save_reminders_to_file(&reminders_lock).unwrap();
                             return Ok(format!("提醒索引 '{}' 已移除", index + 1));
                         } else {
                             return Ok(format!("索引 '{}' 無效", index + 1));

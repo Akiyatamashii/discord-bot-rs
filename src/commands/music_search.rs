@@ -48,7 +48,7 @@ pub async fn run<'a>(
                 {
                     music_list_temp.write().await.clear();
                 }
-                catch(&query, Arc::clone(&music_list_temp)).await;
+                catch(query, Arc::clone(&music_list_temp)).await;
                 if !music_list_temp.read().await.is_empty() {
                     let mut content = String::new();
                     content.push_str("V 搜尋結果 V\n");
@@ -68,5 +68,5 @@ pub async fn run<'a>(
     } else {
         return Ok("獲取參數失敗".to_string());
     }
-    return Ok("".to_string());
+    Ok("".to_string())
 }

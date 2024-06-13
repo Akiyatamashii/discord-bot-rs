@@ -11,44 +11,55 @@ pub async fn prefix_command_process(ctx: &Context, msg: &Message) {
     if content == "!register" {
         println!("get command !register");
         let guild_id = msg.guild_id.unwrap();
-        register_commands(&ctx, &guild_id, false).await;
+        register_commands(ctx, &guild_id, false).await;
         msg.delete(&ctx.http).await.unwrap();
     }
 }
 
 pub async fn interaction_process(handler: &Handler, ctx: &Context, command: &CommandInteraction) {
     let _ = match command.data.name.as_str() {
+        "cash" => {
+            commands::cash::run(ctx, command, &command.data.options()).await;
+            true
+        }
+        "play" => {
+            let msg = commands::play::run(ctx, command, handler.music_list.clone())
+                .await
+                .unwrap();
+            interaction_response(ctx, command, msg, true).await;
+            true
+        }
         "join" => {
-            let msg = commands::join::run(&ctx, &command).await.unwrap();
-            interaction_response(&ctx, &command, msg, true).await;
+            let msg = commands::join::run(ctx, command).await.unwrap();
+            interaction_response(ctx, command, msg, true).await;
             true
         }
         "leave" => {
-            let msg = commands::leave::run(&ctx, &command).await.unwrap();
-            interaction_response(&ctx, &command, msg, true).await;
+            let msg = commands::leave::run(ctx, command).await.unwrap();
+            interaction_response(ctx, command, msg, true).await;
             true
         }
         "ping" => {
             let msg = commands::ping::run(&command.data.options());
-            interaction_response(&ctx, &command, msg, true).await;
+            interaction_response(ctx, command, msg, true).await;
             true
         }
         "info" => {
-            commands::info::run(&ctx, &command, &command.data.options()).await;
+            commands::info::run(ctx, command, &command.data.options()).await;
             true
         }
         "look" => {
             let guild_id = command.guild_id.unwrap();
             let channel_id = command.channel_id;
             let msg = commands::look::run(guild_id, channel_id);
-            interaction_response(&ctx, &command, msg, true).await;
+            interaction_response(ctx, command, msg, true).await;
             true
         }
 
-        "chat" => match commands::chat::run(&ctx, &command, &command.data.options()).await {
+        "chat" => match commands::chat::run(ctx, command, &command.data.options()).await {
             Ok(msg) => {
-                if msg != "" {
-                    interaction_response(&ctx, &command, msg, true).await;
+                if msg.is_empty() {
+                    interaction_response(ctx, command, msg, true).await;
                 }
                 true
             }
@@ -62,10 +73,10 @@ pub async fn interaction_process(handler: &Handler, ctx: &Context, command: &Com
                 false
             }
         },
-        "image" => match commands::image::run(&ctx, &command, &command.data.options()).await {
+        "image" => match commands::image::run(ctx, command, &command.data.options()).await {
             Ok(msg) => {
-                if msg != "" {
-                    interaction_response(&ctx, &command, msg, true).await;
+                if msg.is_empty() {
+                    interaction_response(ctx, command, msg, true).await;
                 }
                 true
             }
@@ -80,7 +91,7 @@ pub async fn interaction_process(handler: &Handler, ctx: &Context, command: &Com
             }
         },
         "remind" => {
-            if !check_permission(&ctx, &command).await {
+            if !check_permission(ctx, command).await {
                 return;
             }
             let channel_id = command.channel_id;
@@ -95,7 +106,7 @@ pub async fn interaction_process(handler: &Handler, ctx: &Context, command: &Com
             .await
             {
                 Ok(msg) => {
-                    interaction_response(&ctx, &command, msg, true).await;
+                    interaction_response(ctx, command, msg, true).await;
                     true
                 }
                 Err(err) => {
@@ -110,7 +121,7 @@ pub async fn interaction_process(handler: &Handler, ctx: &Context, command: &Com
             }
         }
         "rm_remind" => {
-            if !check_permission(&ctx, &command).await {
+            if !check_permission(ctx, command).await {
                 return;
             }
             let channel_id = command.channel_id;
@@ -124,7 +135,7 @@ pub async fn interaction_process(handler: &Handler, ctx: &Context, command: &Com
             .await
             {
                 Ok(msg) => {
-                    interaction_response(&ctx, &command, msg, true).await;
+                    interaction_response(ctx, command, msg, true).await;
                     true
                 }
                 Err(err) => {
@@ -140,8 +151,8 @@ pub async fn interaction_process(handler: &Handler, ctx: &Context, command: &Com
         }
         "music_search" => {
             match commands::music_search::run(
-                &ctx,
-                &command,
+                ctx,
+                command,
                 handler.music_list_temp.clone(),
                 handler.music_list.clone(),
                 &command.data.options(),
@@ -149,8 +160,8 @@ pub async fn interaction_process(handler: &Handler, ctx: &Context, command: &Com
             .await
             {
                 Ok(msg) => {
-                    if msg != "" {
-                        interaction_response(&ctx, &command, msg, true).await;
+                    if msg.is_empty() {
+                        interaction_response(ctx, command, msg, true).await;
                     }
                     true
                 }
@@ -174,8 +185,8 @@ pub async fn interaction_process(handler: &Handler, ctx: &Context, command: &Com
             .await
             {
                 Ok(msg) => {
-                    if msg != "" {
-                        interaction_response(&ctx, &command, msg, true).await;
+                    if msg.is_empty() {
+                        interaction_response(ctx, command, msg, true).await;
                     }
                     true
                 }
@@ -192,7 +203,7 @@ pub async fn interaction_process(handler: &Handler, ctx: &Context, command: &Com
         }
         "music_look" => {
             let msg = commands::music_look::run(handler.music_list.clone()).await;
-            interaction_response(&ctx, &command, msg, false).await;
+            interaction_response(ctx, command, msg, false).await;
             true
         }
         _ => false,

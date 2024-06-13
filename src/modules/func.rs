@@ -19,6 +19,8 @@ use serenity::{
 
 use crate::{commands, Reminder};
 
+type ArcLessReminder = HashMap<GuildId, HashMap<ChannelId, Vec<Reminder>>>;
+
 const SYSTEM_OUTPUT: &str = "[SYSTEM_OUTPUT]:";
 const ERROR_OUTPUT: &str = "[ERROR]:";
 const VOICE_STATE: &str = "[VOICE_STATE]:";
@@ -60,14 +62,6 @@ pub async fn interaction_response(
     }
 }
 
-pub fn load_reminders_from_file(
-) -> Result<HashMap<GuildId, HashMap<ChannelId, Vec<Reminder>>>, Box<dyn std::error::Error>> {
-    let file_content = fs::read_to_string("reminders.json")?;
-    let reminders: HashMap<GuildId, HashMap<ChannelId, Vec<Reminder>>> =
-        serde_json::from_str(&file_content)?;
-    Ok(reminders)
-}
-
 pub async fn check_permission(ctx: &Context, command: &CommandInteraction) -> bool {
     if let Some(permissions) = command.member.clone().unwrap().permissions {
         if !permissions.administrator() {
@@ -82,6 +76,13 @@ pub async fn check_permission(ctx: &Context, command: &CommandInteraction) -> bo
         }
     }
     true
+}
+
+pub fn load_reminders_from_file() -> Result<ArcLessReminder, Box<dyn std::error::Error>> {
+    let file_content = fs::read_to_string("reminders.json")?;
+    let reminders: HashMap<GuildId, HashMap<ChannelId, Vec<Reminder>>> =
+        serde_json::from_str(&file_content)?;
+    Ok(reminders)
 }
 
 pub fn save_reminders_to_file(
@@ -107,7 +108,7 @@ pub async fn register_commands_guild_ids(ctx: &Context) {
     let reader = BufReader::new(file);
     let guild_ids: Vec<GuildId> = reader
         .lines()
-        .filter_map(|line| line.ok())
+        .map_while(Result::ok)
         .filter_map(|line| line.parse::<u64>().ok())
         .map(GuildId::from)
         .collect();
@@ -140,6 +141,8 @@ pub async fn register_commands(ctx: &Context, guild_id: &GuildId, for_guilds: bo
                 commands::music_look::register(),
                 commands::join::register(),
                 commands::leave::register(),
+                commands::play::register(),
+                commands::cash::register()
             ],
         )
         .await;
@@ -182,10 +185,7 @@ fn save_guild_id_to_file(guild_id: &GuildId) -> io::Result<()> {
 
     if !existing_ids.contains(&guild_id.to_string()) {
         // 如果文件中不包含當前 guild_id，則寫入文件
-        let mut file = OpenOptions::new()
-            .write(true)
-            .append(true)
-            .open(file_path)?;
+        let mut file = OpenOptions::new().append(true).open(file_path)?;
 
         writeln!(file, "{}", guild_id)?;
         println!("{} Saved guild_id to file.", system_output());

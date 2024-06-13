@@ -48,8 +48,8 @@ pub async fn run<'a>(
 
     if let Some(prompt) = prompt {
         if let ResolvedValue::String(prompt) = prompt.value {
-            if let Err(err) = image(&ctx, command, prompt, &public).await {
-                println!("{} {} {}", error_output(), "OpenAI mission failed:", err)
+            if let Err(err) = image(ctx, command, prompt, &public).await {
+                println!("{} OpenAI mission failed: {}", error_output(), err)
             }
             return Ok("".to_string());
         } else {
@@ -91,7 +91,7 @@ async fn image(
         revised_prompt: _,
     } = &*res.data[0]
     {
-        img_url = url.clone();
+        img_url.clone_from(url);
     } else {
         let builder = EditInteractionResponse::new().content("獲取圖片連結失敗");
         if let Err(err) = command.edit_response(&ctx.http, builder).await {

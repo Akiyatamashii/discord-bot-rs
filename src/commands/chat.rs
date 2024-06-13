@@ -53,8 +53,8 @@ pub async fn run<'a>(
     };
     if let Some(prompt) = prompt {
         if let ResolvedValue::String(prompt) = prompt.value {
-            if let Err(err) = chat(&ctx, command, prompt, &public).await {
-                println!("{} {} {}", error_output(), "OpenAI mission failed:", err)
+            if let Err(err) = chat(ctx, command, prompt, &public).await {
+                println!("{} OpenAI mission failed: {}", error_output(), err)
             }
             return Ok("".to_string());
         } else {
@@ -73,7 +73,7 @@ async fn chat(
     let client = Client::with_config(openai_config());
     let req = CreateChatCompletionRequestArgs::default()
         .model("gpt-4o")
-        .max_tokens(4096 as u16)
+        .max_tokens(4096_u16)
         .messages([
             ChatCompletionRequestSystemMessageArgs::default()
                 .content("請用繁體中文回覆，並將字數控制為2000字以內。")
@@ -101,7 +101,7 @@ async fn chat(
             Ok(res) => {
                 for choice in res.choices.iter() {
                     if let Some(ref content) = choice.delta.content {
-                        message.push_str(&content);
+                        message.push_str(content);
                         if count > 10 {
                             let builder = EditInteractionResponse::new().content(message.clone());
                             command.edit_response(&ctx.http, builder).await?;

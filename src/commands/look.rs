@@ -38,9 +38,9 @@ fn format_reminders(
             } else {
                 output.push_str(">> 尚未新增提醒\n");
             }
-            output.push_str("\n");
+            output.push('\n')
         } else {
-            output.push_str(">> 當前頻道尚未新增提醒\n\n");
+            output.push_str(">> 當前頻道尚未新增提醒\n\n")
         }
 
         // 再處理其他頻道的提醒
@@ -57,7 +57,7 @@ fn format_reminders(
                 } else {
                     output.push_str(">> 尚未新增提醒\n");
                 }
-                output.push_str("\n");
+                output.push('\n');
             }
         }
     } else {

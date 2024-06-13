@@ -23,7 +23,7 @@ pub async fn run(
             let mut call_lock = call.lock().await;
             if let Some(bot_channel) = call_lock.current_channel() {
                 if bot_channel == channel_id.into() {
-                    return Ok("機器人已經在頻道中".to_string());
+                    Ok("機器人已經在頻道中".to_string())
                 } else {
                     match call_lock.join(channel_id).await {
                         Ok(_) => {
@@ -32,7 +32,7 @@ pub async fn run(
                                 voice_output(),
                                 channel_id.name(&ctx.http).await?
                             );
-                            return Ok("成功切換頻道".to_string());
+                            Ok("成功切換頻道".to_string())
                         }
                         Err(err) => {
                             println!(
@@ -41,7 +41,7 @@ pub async fn run(
                                 channel_id.name(&ctx.http).await?,
                                 err
                             );
-                            return Ok("切換頻道失敗".to_string());
+                            Ok("切換頻道失敗".to_string())
                         }
                     }
                 }
@@ -53,7 +53,7 @@ pub async fn run(
                             voice_output(),
                             channel_id.name(&ctx.http).await?
                         );
-                        return Ok("成功加入頻道".to_string());
+                        Ok("成功加入頻道".to_string())
                     }
                     Err(err) => {
                         println!(
@@ -62,10 +62,10 @@ pub async fn run(
                             channel_id.name(&ctx.http).await?,
                             err
                         );
-                        return Ok("加入頻道失敗".to_string());
+                        Ok("加入頻道失敗".to_string())
                     }
                 }
-            };
+            }
         } else {
             match manager.join(guild_id, channel_id).await {
                 Ok(_) => {
@@ -74,7 +74,7 @@ pub async fn run(
                         voice_output(),
                         channel_id.name(&ctx.http).await?
                     );
-                    return Ok("成功加入頻道".to_string());
+                    Ok("成功加入頻道".to_string())
                 }
                 Err(err) => {
                     println!(
@@ -83,13 +83,13 @@ pub async fn run(
                         channel_id.name(&ctx.http).await?,
                         err
                     );
-                    return Ok("加入頻道失敗".to_string());
+                    Ok("加入頻道失敗".to_string())
                 }
             }
-        };
+        }
     } else {
-        return Ok("請先加入一個語音頻道".to_string());
-    };
+        Ok("請先加入一個語音頻道".to_string())
+    }
 }
 
 pub fn register() -> CreateCommand {

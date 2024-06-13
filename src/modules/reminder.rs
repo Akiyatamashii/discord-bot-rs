@@ -78,7 +78,7 @@ async fn process_reminders(reminders: &Reminders, reminder_store: &Arc<ReminderS
     let now = Utc::now().with_timezone(&*TW);
     // println!("start process reminder check:{}", now.time());
     let target_time = now + chrono::Duration::minutes(30);
-    let handler_reminder = Arc::clone(&reminders);
+    let handler_reminder = Arc::clone(reminders);
     {
         let mut guild_reminders_map = handler_reminder.write().await;
         for (_guild_id, reminders_map) in guild_reminders_map.iter_mut() {
@@ -91,12 +91,12 @@ async fn process_reminders(reminders: &Reminders, reminder_store: &Arc<ReminderS
                     {
                         reminder.last_executed = Some(now.date_naive());
                         let mut reminder_in_30min = reminder_store.reminders_30_min.write().await;
-                        reminder_in_30min.push((channel_id.clone(), reminder.clone()));
+                        reminder_in_30min.push((*channel_id, reminder.clone()));
                     }
                 }
             }
         }
-        save_reminders_to_file(&*guild_reminders_map).expect("Failed to save reminders");
+        save_reminders_to_file(&guild_reminders_map).expect("Failed to save reminders");
     }
 }
 
@@ -113,9 +113,9 @@ async fn check_2min_remind(http: Arc<Http>, remind_store: Arc<ReminderStore>) {
             for (channel_id, reminder) in reminder_in_30min.iter() {
                 if reminder.time > now.time() && reminder.time < target_time.time() {
                     let mut reminder_in_2min = remind_store.reminders_2_min.write().await;
-                    reminder_in_2min.push((channel_id.clone(), reminder.clone()));
+                    reminder_in_2min.push((*channel_id, reminder.clone()));
                 } else {
-                    new_list.push((channel_id.clone(), reminder.clone()));
+                    new_list.push((*channel_id, reminder.clone()));
                 }
             }
         }
@@ -155,7 +155,7 @@ async fn check_1secs_remind(http: Arc<Http>, remind_store: Arc<ReminderStore>) {
                         println!("{} sending message: {:?}", error_output(), err);
                     }
                 } else {
-                    new_list.push((channel_id.clone(), reminder.clone()));
+                    new_list.push((*channel_id, reminder.clone()));
                 }
             }
         }
