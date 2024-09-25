@@ -57,6 +57,7 @@ This is a multi-functional Discord bot developed using the Rust programming lang
    - Create a new bot in the Discord Developer Portal using your bot token.
    - Add the bot to your server.
    - Use the `/register` command in the server to register bot commands.
+   - Use `info` to get more information about the bot.
 7. Enjoy your Discord bot!
 
 ## Usage
