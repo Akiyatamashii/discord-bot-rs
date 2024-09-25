@@ -1,7 +1,7 @@
 use std::error::Error;
 
 use async_openai::{
-    types::{CreateImageRequestArgs, Image::Url, ImageModel, ImageSize, ResponseFormat},
+    types::{CreateImageRequestArgs, Image::Url, ImageModel, ImageResponseFormat, ImageSize},
     Client,
 };
 use serenity::{
@@ -70,7 +70,7 @@ async fn image(
     let req = CreateImageRequestArgs::default()
         .prompt(prompt)
         .n(1)
-        .response_format(ResponseFormat::Url)
+        .response_format(ImageResponseFormat::Url)
         .size(ImageSize::S1024x1024)
         .model(ImageModel::DallE3)
         .user(&command.user.name)

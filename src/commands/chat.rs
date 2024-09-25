@@ -72,7 +72,7 @@ async fn chat(
 ) -> Result<(), Box<dyn Error + Send + Sync>> {
     let client = Client::with_config(openai_config());
     let req = CreateChatCompletionRequestArgs::default()
-        .model("gpt-4o")
+        .model("gpt-4o-mini-2024-07-18")
         .max_tokens(4096_u16)
         .messages([
             ChatCompletionRequestSystemMessageArgs::default()
