@@ -1,6 +1,6 @@
 > ### **AI生成 ( OpenAI )**
 > 
-> - /chat [message] [public]\(可選\)：與ChatGPT對話，目前尚無記憶能力 (model:ChatGPT-4o)
+> - /chat [message] [public]\(可選\)：與ChatGPT進行單次對話 (model:ChatGPT-4o-mini)
 >  - message：與ChatGPT對話的訊息
 >  - public：是否讓其他人可以看到回覆
 >  - Ex：/chat 你好 true (跟ChatGPT說你好，且讓他人看到回覆)
