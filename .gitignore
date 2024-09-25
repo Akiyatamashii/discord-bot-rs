@@ -3,3 +3,4 @@
 reminders.json
 guild_id.txt
 cash.json
+_*.rs
