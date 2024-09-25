@@ -18,68 +18,29 @@ pub async fn prefix_command_process(ctx: &Context, msg: &Message) {
 
 pub async fn interaction_process(handler: &Handler, ctx: &Context, command: &CommandInteraction) {
     let _ = match command.data.name.as_str() {
-        "cash" => {
-            commands::cash::run(ctx, command, &command.data.options()).await;
-            true
-        }
         "ping" => {
-            let msg = commands::ping::run(&command.data.options());
+            let msg = commands::base::ping::run(&command.data.options());
             interaction_response(ctx, command, msg, true).await;
             true
         }
         "info" => {
-            commands::info::run(ctx, command, &command.data.options()).await;
+            commands::base::info::run(ctx, command, &command.data.options()).await;
             true
         }
         "look" => {
             let guild_id = command.guild_id.unwrap();
             let channel_id = command.channel_id;
-            let msg = commands::look::run(guild_id, channel_id);
+            let msg = commands::reminder::look::run(guild_id, channel_id);
             interaction_response(ctx, command, msg, true).await;
             true
         }
-
-        "chat" => match commands::chat::run(ctx, command, &command.data.options()).await {
-            Ok(msg) => {
-                if msg.is_empty() {
-                    interaction_response(ctx, command, msg, true).await;
-                }
-                true
-            }
-            Err(err) => {
-                println!(
-                    "{} {} {}",
-                    error_output(),
-                    "OpenAI mission filed:".red(),
-                    err
-                );
-                false
-            }
-        },
-        "image" => match commands::image::run(ctx, command, &command.data.options()).await {
-            Ok(msg) => {
-                if msg.is_empty() {
-                    interaction_response(ctx, command, msg, true).await;
-                }
-                true
-            }
-            Err(err) => {
-                println!(
-                    "{} {} {}",
-                    error_output(),
-                    "OpenAI mission filed:".red(),
-                    err
-                );
-                false
-            }
-        },
         "remind" => {
             if !check_permission(ctx, command).await {
                 return;
             }
             let channel_id = command.channel_id;
             let guild_id = command.guild_id.unwrap();
-            match commands::remind::run(
+            match commands::reminder::remind::run(
                 &command.data.options(),
                 handler.reminders.clone(),
                 channel_id,
@@ -109,7 +70,7 @@ pub async fn interaction_process(handler: &Handler, ctx: &Context, command: &Com
             }
             let channel_id = command.channel_id;
             let guild_id = command.guild_id.unwrap();
-            match commands::rm_remind::run(
+            match commands::reminder::rm_remind::run(
                 &command.data.options(),
                 handler.reminders.clone(),
                 channel_id,
@@ -131,6 +92,53 @@ pub async fn interaction_process(handler: &Handler, ctx: &Context, command: &Com
                     false
                 }
             }
+        }
+
+        "chat" => match commands::openai::chat::run(ctx, command, &command.data.options()).await {
+            Ok(msg) => {
+                if !msg.is_empty() {
+                    interaction_response(ctx, command, msg, true).await;
+                }
+                true
+            }
+            Err(err) => {
+                println!(
+                    "{} {} {}",
+                    error_output(),
+                    "OpenAI mission filed:".red(),
+                    err
+                );
+                false
+            }
+        },
+        "image" => {
+            match commands::openai::image::run(ctx, command, &command.data.options()).await {
+                Ok(msg) => {
+                    if msg.is_empty() {
+                        interaction_response(ctx, command, msg, true).await;
+                    }
+                    true
+                }
+                Err(err) => {
+                    println!(
+                        "{} {} {}",
+                        error_output(),
+                        "OpenAI mission filed:".red(),
+                        err
+                    );
+                    false
+                }
+            }
+        }
+        "model_list" => {
+            let msg = commands::openai::model_list::run(&command.data.options()).await;
+            interaction_response(ctx, command, msg, true).await;
+            true
+        }
+
+        "cash" => {
+            commands::cash::run(ctx, command, &command.data.options()).await;
+            true
         }
         _ => false,
     };

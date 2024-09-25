@@ -125,13 +125,14 @@ pub async fn register_commands(ctx: &Context, guild_id: &GuildId, for_guilds: bo
         .set_commands(
             ctx,
             vec![
-                commands::ping::register(),
-                commands::remind::register(),
-                commands::look::register(),
-                commands::rm_remind::register(),
-                commands::chat::register(),
-                commands::image::register(),
-                commands::info::register(),
+                commands::base::info::register(),
+                commands::base::ping::register(),
+                commands::reminder::remind::register(),
+                commands::reminder::look::register(),
+                commands::reminder::rm_remind::register(),
+                commands::openai::chat::register(),
+                commands::openai::image::register(),
+                commands::openai::model_list::register(),
                 commands::cash::register()
             ],
         )
