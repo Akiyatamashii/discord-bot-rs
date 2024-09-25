@@ -106,6 +106,15 @@ For a complete list of dependencies, please check the `Cargo.toml` file.
 
 Pull requests are welcome to improve this project. For major changes, please open an issue first to discuss what you would like to change.
 
+## Version
+
+Current version: 0.7.0
+
+### Changelog
+
+- 0.7.0: Added new features (please specify the new features)
+- 0.6.1: Previous version
+
 ## License
 
 This project is licensed under the [MIT License](LICENSE).
