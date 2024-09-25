@@ -6,10 +6,12 @@ use serenity::{builder::CreateCommand, model::prelude::ChannelId};
 use crate::modules::func::load_reminders_from_file;
 use crate::Reminder;
 
+// 註冊 look 命令
 pub fn register() -> CreateCommand {
     CreateCommand::new("look").description("查看當前設置的提醒")
 }
 
+// 執行 look 命令的主函數
 pub fn run(guild_id: GuildId, channel_id: ChannelId) -> String {
     match load_reminders_from_file() {
         Ok(reminders) => format_reminders(reminders, guild_id, channel_id),
@@ -17,6 +19,7 @@ pub fn run(guild_id: GuildId, channel_id: ChannelId) -> String {
     }
 }
 
+// 格式化提醒信息的函數
 fn format_reminders(
     reminders: HashMap<GuildId, HashMap<ChannelId, Vec<Reminder>>>,
     o_guild_id: GuildId,

@@ -12,7 +12,7 @@ use serenity::all::{
     ResolvedValue, UserId,
 };
 
-// cash
+// 定義 Cash 結構體，用於存儲單筆欠款信息
 #[derive(Deserialize, Serialize)]
 struct Cash {
     creator: UserId,
@@ -22,16 +22,19 @@ struct Cash {
     ps: String,
 }
 
+// 定義 CashList 結構體，用於存儲所有欠款信息
 #[derive(Deserialize, Serialize)]
 struct CashList(HashMap<GuildId, Vec<Cash>>);
 
 impl CashList {
+    // 創建新的 CashList 實例
     fn new() -> Self {
         let list: HashMap<GuildId, Vec<Cash>> = HashMap::new();
         CashList(list)
     }
 }
 
+// 實現 Deref trait，允許 CashList 直接使用 HashMap 的方法
 impl Deref for CashList {
     type Target = HashMap<GuildId, Vec<Cash>>;
     fn deref(&self) -> &Self::Target {
@@ -39,12 +42,14 @@ impl Deref for CashList {
     }
 }
 
+// 實現 DerefMut trait，允許 CashList 直接使用 HashMap 的可變方法
 impl DerefMut for CashList {
     fn deref_mut(&mut self) -> &mut Self::Target {
         &mut self.0
     }
 }
 
+// 註冊 cash 命令
 pub fn register() -> CreateCommand {
     CreateCommand::new("cash")
         .description("欠債系統")
@@ -82,11 +87,13 @@ pub fn register() -> CreateCommand {
         ))
 }
 
+// 執行 cash 命令的主函數
 pub async fn run<'a>(
     ctx: &Context,
     command: &CommandInteraction,
     options: &'a [ResolvedOption<'a>],
 ) {
+    // 從選項中獲取各個參數的值
     let command_type = options
         .iter()
         .find(|opt| opt.name == "type")
@@ -140,6 +147,7 @@ pub async fn run<'a>(
             _ => None,
         });
 
+    // 根據命令類型執行相應的操作
     match command_type {
         "look" => look(ctx, command).await,
         "add" => {
@@ -176,6 +184,7 @@ pub async fn run<'a>(
     }
 }
 
+// 查看欠款列表
 async fn look(ctx: &Context, command: &CommandInteraction) {
     let cash_lists = match load_cash_data() {
         Ok(cash_lists) => cash_lists,
@@ -218,6 +227,7 @@ async fn look(ctx: &Context, command: &CommandInteraction) {
     command.create_response(&ctx.http, builder).await.ok();
 }
 
+// 添加新的欠款記錄
 async fn add(ctx: &Context, command: &CommandInteraction, cash: Cash) {
     let guild_id = command.guild_id.unwrap();
     let mut cash_lists = match load_cash_data().ok() {
@@ -244,6 +254,7 @@ async fn add(ctx: &Context, command: &CommandInteraction, cash: Cash) {
     }
 }
 
+// 刪除指定的欠款記錄
 async fn del(ctx: &Context, command: &CommandInteraction, index: usize) {
     let mut cash_lists = match load_cash_data().ok() {
         Some(cash_lists) => cash_lists,
@@ -304,12 +315,14 @@ async fn del(ctx: &Context, command: &CommandInteraction, index: usize) {
     }
 }
 
+// 保存欠款數據到文件
 fn save_cash_data(cash_list: &CashList) -> Result<(), Box<dyn Error + Send + Sync>> {
     let json_content = serde_json::to_string(cash_list)?;
     fs::write("./cash.json", json_content)?;
     Ok(())
 }
 
+// 從文件加載欠款數據
 fn load_cash_data() -> Result<CashList, Box<dyn Error + Send + Sync>> {
     let json_content = fs::read_to_string("./cash.json")?;
     let cash: CashList = serde_json::from_str(&json_content)?;

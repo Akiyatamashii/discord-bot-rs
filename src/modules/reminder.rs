@@ -12,8 +12,10 @@ use tokio::{
     time::{interval, Duration},
 };
 
+// 定義台北時區
 static TW: Lazy<Tz> = Lazy::new(|| "Asia/Taipei".parse().unwrap());
 
+// 定義提醒存儲結構
 #[derive(Clone, Default)]
 struct ReminderStore {
     reminders_30_min: Arc<RwLock<Vec<(ChannelId, Reminder)>>>,
@@ -32,6 +34,7 @@ impl ReminderStore {
     }
 }
 
+// 主要的提醒任務函數
 pub async fn remind_task(http: Arc<Http>, reminders: Reminders, notify: Arc<Notify>) {
     println!(
         "{} {}",
@@ -39,7 +42,7 @@ pub async fn remind_task(http: Arc<Http>, reminders: Reminders, notify: Arc<Noti
         "Reminder remind_task start".green()
     );
 
-    let mut wait_time = interval(Duration::from_secs(1800));
+    let mut wait_time = interval(Duration::from_secs(1800)); // 30分鐘檢查一次
     let reminder_store = Arc::new(ReminderStore::new());
 
     loop {
@@ -57,7 +60,8 @@ pub async fn remind_task(http: Arc<Http>, reminders: Reminders, notify: Arc<Noti
                     ));
                 }
             }
-            _ = notify.notified() =>{
+            _ = notify.notified() => {
+                // 當有新的提醒被添加時，立即處理
                 process_reminders(&reminders, &reminder_store).await;
 
                 if !reminder_store.reminders_30_min.read().await.is_empty()
@@ -74,9 +78,9 @@ pub async fn remind_task(http: Arc<Http>, reminders: Reminders, notify: Arc<Noti
     }
 }
 
+// 處理提醒的函數
 async fn process_reminders(reminders: &Reminders, reminder_store: &Arc<ReminderStore>) {
     let now = Utc::now().with_timezone(&*TW);
-    // println!("start process reminder check:{}", now.time());
     let target_time = now + chrono::Duration::minutes(30);
     let handler_reminder = Arc::clone(reminders);
     {
@@ -84,6 +88,7 @@ async fn process_reminders(reminders: &Reminders, reminder_store: &Arc<ReminderS
         for (_guild_id, reminders_map) in guild_reminders_map.iter_mut() {
             for (channel_id, reminders) in reminders_map.iter_mut() {
                 for reminder in reminders.iter_mut() {
+                    // 檢查提醒是否在接下來的30分鐘內需要執行
                     if reminder.weekdays.contains(&now.weekday())
                         && reminder.time > now.time()
                         && reminder.time <= target_time.time()
@@ -100,12 +105,12 @@ async fn process_reminders(reminders: &Reminders, reminder_store: &Arc<ReminderS
     }
 }
 
+// 檢查2分鐘內的提醒
 async fn check_2min_remind(http: Arc<Http>, remind_store: Arc<ReminderStore>) {
     let mut wait_time = interval(Duration::from_secs(120));
     loop {
         wait_time.tick().await;
         let now = Utc::now().with_timezone(&*TW);
-        // println!("start 2min check:{}", now.time());
         let target_time = now + chrono::Duration::minutes(2);
         let mut new_list = Vec::new();
         {
@@ -121,6 +126,7 @@ async fn check_2min_remind(http: Arc<Http>, remind_store: Arc<ReminderStore>) {
         }
         *remind_store.reminders_30_min.write().await = new_list;
 
+        // 如果有2分鐘內的提醒，啟動1秒檢查
         if !remind_store.reminders_2_min.read().await.is_empty()
             && !*remind_store.one_secs_checking.read().await
         {
@@ -136,21 +142,21 @@ async fn check_2min_remind(http: Arc<Http>, remind_store: Arc<ReminderStore>) {
             break;
         }
     }
-    // println!("stop 2min check");
 }
 
+// 檢查1秒內的提醒並發送
 async fn check_1secs_remind(http: Arc<Http>, remind_store: Arc<ReminderStore>) {
     let mut wait_time = interval(Duration::from_secs(1));
     loop {
         wait_time.tick().await;
         let now = Utc::now().with_timezone(&*TW);
-        // println!("start 1secs check:{}", now.time());
         let time = NaiveTime::from_hms_opt(now.hour(), now.minute(), now.second()).unwrap();
         let mut new_list = Vec::new();
         {
             let reminder_in_2min = remind_store.reminders_2_min.read().await;
             for (channel_id, reminder) in reminder_in_2min.iter() {
                 if reminder.time == time {
+                    // 發送提醒消息
                     if let Err(err) = channel_id.say(&http, &reminder.message).await {
                         println!("{} sending message: {:?}", error_output(), err);
                     }
@@ -166,5 +172,4 @@ async fn check_1secs_remind(http: Arc<Http>, remind_store: Arc<ReminderStore>) {
             break;
         }
     }
-    // println!("stop 1secs check");
 }

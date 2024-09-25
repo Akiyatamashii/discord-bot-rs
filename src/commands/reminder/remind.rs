@@ -14,6 +14,7 @@ use tokio::sync::Notify;
 use crate::Reminder;
 use crate::{modules::func::save_reminders_to_file, Reminders};
 
+// 註冊 remind 命令
 pub fn register() -> CreateCommand {
     CreateCommand::new("remind")
         .description("設置提醒")
@@ -39,6 +40,7 @@ pub fn register() -> CreateCommand {
         )
 }
 
+// 執行 remind 命令的主函數
 pub async fn run<'a>(
     options: &'a [ResolvedOption<'a>],
     reminder: Reminders,
@@ -46,6 +48,7 @@ pub async fn run<'a>(
     guild_id: GuildId,
     notify: &Arc<Notify>,
 ) -> Result<String, Box<dyn Error + Send + Sync>> {
+    // 從選項中獲取 weekdays、time 和 message 的值
     let weekdays = options
         .iter()
         .find(|opt| opt.name == "weekdays")
@@ -73,6 +76,7 @@ pub async fn run<'a>(
         })
         .unwrap_or(&"");
 
+    // 解析星期幾
     let weekdays_result: Result<Vec<Weekday>, _> = weekdays
         .split(',')
         .map(|s| s.trim().parse::<u32>())
@@ -85,7 +89,7 @@ pub async fn run<'a>(
                 5 => Weekday::Fri,
                 6 => Weekday::Sat,
                 7 => Weekday::Sun,
-                _ => Weekday::Mon,
+                _ => Weekday::Mon, // 默認為星期一
             })
         })
         .collect();
@@ -103,6 +107,7 @@ pub async fn run<'a>(
 
     let reminder_message = message.to_string();
 
+    // 添加新的提醒
     {
         let mut reminders = reminder.write().await;
         let guild_reminder = reminders.entry(guild_id).or_insert_with(HashMap::new);
@@ -113,9 +118,11 @@ pub async fn run<'a>(
             message: reminder_message,
             last_executed: None,
         });
+        // 保存提醒到文件
         save_reminders_to_file(&reminders).expect("Failed to save reminders");
     }
 
+    // 通知提醒處理器有新的提醒
     notify.notify_one();
 
     Ok(">> 已設定每週提醒".to_string())

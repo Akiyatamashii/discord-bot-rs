@@ -21,28 +21,33 @@ use crate::{commands, Reminder};
 
 type ArcLessReminder = HashMap<GuildId, HashMap<ChannelId, Vec<Reminder>>>;
 
+// 常量定義
 const SYSTEM_OUTPUT: &str = "[SYSTEM_OUTPUT]:";
 const ERROR_OUTPUT: &str = "[ERROR]:";
 const INFO_PATH: &str = "./info/";
 
-
+// 返回藍色的系統輸出前綴
 pub fn system_output() -> ColoredString {
     SYSTEM_OUTPUT.blue()
 }
 
+// 返回紅色加粗的錯誤輸出前綴
 pub fn error_output() -> ColoredString {
     ERROR_OUTPUT.red().bold()
 }
 
+// 創建 OpenAI 配置
 pub fn openai_config() -> OpenAIConfig {
     let api = env::var("API_KEY").unwrap();
     OpenAIConfig::new().with_api_key(api)
 }
 
+// 返回信息路徑
 pub fn info_path() -> String {
     INFO_PATH.to_string()
 }
 
+// 處理交互響應
 pub async fn interaction_response(
     ctx: &Context,
     command: &CommandInteraction,
@@ -58,6 +63,7 @@ pub async fn interaction_response(
     }
 }
 
+// 檢查用戶權限
 pub async fn check_permission(ctx: &Context, command: &CommandInteraction) -> bool {
     if let Some(permissions) = command.member.clone().unwrap().permissions {
         if !permissions.administrator() {
@@ -74,6 +80,7 @@ pub async fn check_permission(ctx: &Context, command: &CommandInteraction) -> bo
     true
 }
 
+// 從文件加載提醒
 pub fn load_reminders_from_file() -> Result<ArcLessReminder, Box<dyn std::error::Error>> {
     let file_content = fs::read_to_string("reminders.json")?;
     let reminders: HashMap<GuildId, HashMap<ChannelId, Vec<Reminder>>> =
@@ -81,6 +88,7 @@ pub fn load_reminders_from_file() -> Result<ArcLessReminder, Box<dyn std::error:
     Ok(reminders)
 }
 
+// 保存提醒到文件
 pub fn save_reminders_to_file(
     reminders: &HashMap<GuildId, HashMap<ChannelId, Vec<Reminder>>>,
 ) -> Result<(), Box<dyn Error>> {
@@ -89,6 +97,7 @@ pub fn save_reminders_to_file(
     Ok(())
 }
 
+// 為所有 guild 註冊命令
 pub async fn register_commands_guild_ids(ctx: &Context) {
     let file_path = "guild_id.txt";
 
@@ -120,6 +129,7 @@ pub async fn register_commands_guild_ids(ctx: &Context) {
     );
 }
 
+// 為特定 guild 註冊命令
 pub async fn register_commands(ctx: &Context, guild_id: &GuildId, for_guilds: bool) {
     let command = guild_id
         .set_commands(
@@ -165,6 +175,7 @@ pub async fn register_commands(ctx: &Context, guild_id: &GuildId, for_guilds: bo
     }
 }
 
+// 保存 guild_id 到文件
 fn save_guild_id_to_file(guild_id: &GuildId) -> io::Result<()> {
     let file_path = "guild_id.txt";
 
@@ -185,7 +196,7 @@ fn save_guild_id_to_file(guild_id: &GuildId) -> io::Result<()> {
     Ok(())
 }
 
-// 輔助函數，用於檢查文件是否存在，若不存在則創建
+// 確保 guild_id 文件存在
 pub fn ensure_guild_id_file_exists(file_path: &str) -> io::Result<()> {
     if !Path::new(file_path).exists() {
         File::create(file_path)?;
