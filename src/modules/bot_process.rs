@@ -22,23 +22,6 @@ pub async fn interaction_process(handler: &Handler, ctx: &Context, command: &Com
             commands::cash::run(ctx, command, &command.data.options()).await;
             true
         }
-        "play" => {
-            let msg = commands::play::run(ctx, command, handler.music_list.clone())
-                .await
-                .unwrap();
-            interaction_response(ctx, command, msg, true).await;
-            true
-        }
-        "join" => {
-            let msg = commands::join::run(ctx, command).await.unwrap();
-            interaction_response(ctx, command, msg, true).await;
-            true
-        }
-        "leave" => {
-            let msg = commands::leave::run(ctx, command).await.unwrap();
-            interaction_response(ctx, command, msg, true).await;
-            true
-        }
         "ping" => {
             let msg = commands::ping::run(&command.data.options());
             interaction_response(ctx, command, msg, true).await;
@@ -148,63 +131,6 @@ pub async fn interaction_process(handler: &Handler, ctx: &Context, command: &Com
                     false
                 }
             }
-        }
-        "music_search" => {
-            match commands::music_search::run(
-                ctx,
-                command,
-                handler.music_list_temp.clone(),
-                handler.music_list.clone(),
-                &command.data.options(),
-            )
-            .await
-            {
-                Ok(msg) => {
-                    if msg.is_empty() {
-                        interaction_response(ctx, command, msg, true).await;
-                    }
-                    true
-                }
-                Err(err) => {
-                    println!(
-                        "{} {} {}",
-                        error_output(),
-                        "OpenAI mission filed:".red(),
-                        err
-                    );
-                    false
-                }
-            }
-        }
-        "music_select" => {
-            match commands::music_select::run(
-                handler.music_list_temp.clone(),
-                handler.music_list.clone(),
-                &command.data.options(),
-            )
-            .await
-            {
-                Ok(msg) => {
-                    if msg.is_empty() {
-                        interaction_response(ctx, command, msg, true).await;
-                    }
-                    true
-                }
-                Err(err) => {
-                    println!(
-                        "{} {} {}",
-                        error_output(),
-                        "OpenAI mission filed:".red(),
-                        err
-                    );
-                    false
-                }
-            }
-        }
-        "music_look" => {
-            let msg = commands::music_look::run(handler.music_list.clone()).await;
-            interaction_response(ctx, command, msg, false).await;
-            true
         }
         _ => false,
     };

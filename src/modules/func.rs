@@ -23,12 +23,8 @@ type ArcLessReminder = HashMap<GuildId, HashMap<ChannelId, Vec<Reminder>>>;
 
 const SYSTEM_OUTPUT: &str = "[SYSTEM_OUTPUT]:";
 const ERROR_OUTPUT: &str = "[ERROR]:";
-const VOICE_STATE: &str = "[VOICE_STATE]:";
 const INFO_PATH: &str = "./info/";
 
-pub fn voice_output() -> ColoredString {
-    VOICE_STATE.yellow()
-}
 
 pub fn system_output() -> ColoredString {
     SYSTEM_OUTPUT.blue()
@@ -136,12 +132,6 @@ pub async fn register_commands(ctx: &Context, guild_id: &GuildId, for_guilds: bo
                 commands::chat::register(),
                 commands::image::register(),
                 commands::info::register(),
-                commands::music_search::register(),
-                commands::music_select::register(),
-                commands::music_look::register(),
-                commands::join::register(),
-                commands::leave::register(),
-                commands::play::register(),
                 commands::cash::register()
             ],
         )
