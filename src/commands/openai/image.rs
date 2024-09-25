@@ -22,6 +22,11 @@ pub fn register() -> CreateCommand {
             CreateCommandOption::new(CommandOptionType::String, "prompt", "提示詞").required(true),
         )
         .add_option(CreateCommandOption::new(
+            CommandOptionType::String,
+            "model",
+            "選擇的模型",
+        ))
+        .add_option(CreateCommandOption::new(
             CommandOptionType::Boolean,
             "public",
             "是否公開顯示",
@@ -35,6 +40,7 @@ pub async fn run<'a>(
 ) -> Result<String, Box<dyn std::error::Error + Send + Sync>> {
     let prompt = options.iter().find(|opt| opt.name == "prompt");
     let public_result = options.iter().find(|opt| opt.name == "public");
+    let model_result = options.iter().find(|opt| opt.name == "model");
 
     let public = if let Some(public_option) = public_result {
         if let ResolvedValue::Boolean(public) = public_option.value {
@@ -46,9 +52,19 @@ pub async fn run<'a>(
         false
     };
 
+    let model = if let Some(model_option) = model_result {
+        if let ResolvedValue::String(model) = model_option.value {
+            model
+        } else {
+            "dall-e-3"
+        }
+    } else {
+        "dall-e-3"
+    };
+
     if let Some(prompt) = prompt {
         if let ResolvedValue::String(prompt) = prompt.value {
-            if let Err(err) = image(ctx, command, prompt, &public).await {
+            if let Err(err) = image(ctx, command, prompt, model, &public).await {
                 println!("{} OpenAI mission failed: {}", error_output(), err)
             }
             return Ok("".to_string());
@@ -63,6 +79,7 @@ async fn image(
     ctx: &Context,
     command: &CommandInteraction,
     prompt: &str,
+    model: &str,
     public: &bool,
 ) -> Result<(), Box<dyn Error + Send + Sync>> {
     let client = Client::with_config(openai_config());
@@ -72,7 +89,7 @@ async fn image(
         .n(1)
         .response_format(ImageResponseFormat::Url)
         .size(ImageSize::S1024x1024)
-        .model(ImageModel::DallE3)
+        .model(ImageModel::Other(model.to_string()))
         .user(&command.user.name)
         .build()?;
 
