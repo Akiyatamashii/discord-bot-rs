@@ -2,7 +2,7 @@ use std::{collections::HashMap, env, sync::Arc};
 
 use chrono::{NaiveDate, NaiveTime, Weekday};
 use colored::*;
-use dotenv::dotenv;
+use dotenvy::dotenv;
 use regex::Regex;
 use serde::{Deserialize, Serialize};
 use serenity::{
