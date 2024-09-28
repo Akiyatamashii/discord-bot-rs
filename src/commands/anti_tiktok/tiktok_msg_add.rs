@@ -5,7 +5,7 @@ use serenity::all::{
 };
 use tokio::sync::RwLock;
 
-use crate::modules::tiktok_refuse::add_tiktok_refuse_msg;
+use crate::modules::anti_tiktok::add_tiktok_refuse_msg;
 
 // 註冊 tiktok_refuse 命令
 pub fn register() -> CreateCommand {

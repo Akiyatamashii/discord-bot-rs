@@ -11,7 +11,7 @@ pub mod reminder;
 pub mod base;
 
 // 引入拒絕 TikTok 相關的命令
-pub mod tiktok_refuse;
+pub mod anti_tiktok;
 
 // 這個模塊文件定義了機器人的主要命令結構
 // 每個子模塊包含特定功能的命令：

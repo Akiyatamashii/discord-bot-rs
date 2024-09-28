@@ -15,12 +15,12 @@ use tokio::sync::{Notify, RwLock};
 
 mod commands;
 mod modules;
-use modules::{bot_process::{interaction_process, prefix_command_process}, tiktok_refuse::load_tiktok_refuse_msg};
+use modules::{bot_process::{interaction_process, prefix_command_process}, anti_tiktok::load_tiktok_refuse_msg};
 use modules::func::{
     ensure_file_exists, error_output, load_reminders_from_file,
     register_commands_guild_ids, system_output,
 };
-use modules::tiktok_refuse::tiktok_refuse;
+use modules::anti_tiktok::tiktok_refuse;
 #[derive(Serialize, Deserialize, Clone, Debug)]
 struct Reminder {
     //提醒器結構

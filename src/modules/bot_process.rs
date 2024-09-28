@@ -166,7 +166,7 @@ pub async fn interaction_process(handler: &Handler, ctx: &Context, command: &Com
         // 處理 tiktok_msg_add 命令（添加拒絕 TikTok 訊息）
         "tiktok_msg_add" => {
             let tiktok_refuse_msg = Arc::clone(&handler.tiktok_refuse_msg);
-            if let Ok(msg) = commands::tiktok_refuse::tiktok_msg_add::run(
+            if let Ok(msg) = commands::anti_tiktok::tiktok_msg_add::run(
                 &command.data.options(),
                 tiktok_refuse_msg,
             )

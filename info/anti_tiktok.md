@@ -1,4 +1,4 @@
-> ### **拒絕 TikTok ( TikTok Refuse )**
+> ### **反 TikTok ( Anti TikTok )**
 > 
 > 嘲諷發送TikTok連結的群組成員。
 > 

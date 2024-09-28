@@ -8,7 +8,7 @@ pub mod func;
 pub mod bot_process;
 
 // 引入拒絕TikTok的模塊
-pub mod tiktok_refuse;
+pub mod anti_tiktok;
 
 // 這個模塊文件定義了機器人的核心功能結構
 // 每個子模塊包含特定功能的實現：
