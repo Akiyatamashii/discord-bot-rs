@@ -82,7 +82,7 @@ pub async fn check_permission(ctx: &Context, command: &CommandInteraction) -> bo
 
 // 從文件加載提醒
 pub fn load_reminders_from_file() -> Result<ArcLessReminder, Box<dyn std::error::Error>> {
-    let file_content = fs::read_to_string("reminders.json")?;
+    let file_content = fs::read_to_string("assets/reminders.json")?;
     let reminders: HashMap<GuildId, HashMap<ChannelId, Vec<Reminder>>> =
         serde_json::from_str(&file_content)?;
     Ok(reminders)
@@ -93,13 +93,13 @@ pub fn save_reminders_to_file(
     reminders: &HashMap<GuildId, HashMap<ChannelId, Vec<Reminder>>>,
 ) -> Result<(), Box<dyn Error>> {
     let json_content = serde_json::to_string(reminders)?;
-    std::fs::write("reminders.json", json_content)?;
+    std::fs::write("assets/reminders.json", json_content)?;
     Ok(())
 }
 
 // 為所有 guild 註冊命令
 pub async fn register_commands_guild_ids(ctx: &Context) {
-    let file_path = "guild_id.txt";
+    let file_path = "assets/guild_id.txt";
 
     // 讀取 guild_id.txt 內的所有 guild_id
     let file = match File::open(file_path) {
@@ -135,15 +135,21 @@ pub async fn register_commands(ctx: &Context, guild_id: &GuildId, for_guilds: bo
         .set_commands(
             ctx,
             vec![
+                // 基本命令
                 commands::base::info::register(),
                 commands::base::ping::register(),
+                commands::base::update::register(),
+                // 提醒相關命令
                 commands::reminder::remind::register(),
                 commands::reminder::look::register(),
                 commands::reminder::rm_remind::register(),
+                // OpenAI 相關命令
                 commands::openai::chat::register(),
                 commands::openai::image::register(),
                 commands::openai::model_list::register(),
-                commands::cash::register()
+                // 其他功能命令
+                commands::cash::register(),
+                commands::tiktok_refuse::tiktok_msg_add::register(),
             ],
         )
         .await;
@@ -177,7 +183,7 @@ pub async fn register_commands(ctx: &Context, guild_id: &GuildId, for_guilds: bo
 
 // 保存 guild_id 到文件
 fn save_guild_id_to_file(guild_id: &GuildId) -> io::Result<()> {
-    let file_path = "guild_id.txt";
+    let file_path = "assets/guild_id.txt";
 
     // 讀取已存在的 guild_id
     let existing_ids = match fs::read_to_string(file_path) {
@@ -196,8 +202,14 @@ fn save_guild_id_to_file(guild_id: &GuildId) -> io::Result<()> {
     Ok(())
 }
 
-// 確保 guild_id 文件存在
-pub fn ensure_guild_id_file_exists(file_path: &str) -> io::Result<()> {
+// 確保資料夾與文件存在
+pub fn ensure_file_exists(file_path: &str) -> io::Result<()> {
+    // 確保目錄存在
+    if let Some(parent) = Path::new(file_path).parent() {
+        fs::create_dir_all(parent)?;
+    }
+    
+    // 確保文件存在
     if !Path::new(file_path).exists() {
         File::create(file_path)?;
     }
