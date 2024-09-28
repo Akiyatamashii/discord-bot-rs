@@ -61,7 +61,10 @@ impl EventHandler for Handler {
             prefix_command_process(&ctx, &msg).await
         };
 
-        tiktok_refuse(&ctx, &msg, Arc::clone(&self.tiktok_refuse_msg)).await;
+        if msg.guild_id == Some(GuildId::new(1143403544599334992)) {
+            tiktok_refuse(&ctx, &msg, Arc::clone(&self.tiktok_refuse_msg)).await;
+        }
+
     }
 
     // 處理交互命令
