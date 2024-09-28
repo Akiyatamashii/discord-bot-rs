@@ -1,5 +1,5 @@
 > ### **AI生成 ( OpenAI )**
->
+> 
 > Ai生成系統方便群組成員可以更方便地使用AI生成圖片和與ChatGPT進行單次對話。
 > 
 > - /chat [message] [public] \(可選\) [model]\(可選\)：與ChatGPT進行單次對話 (預設model:ChatGPT-4o-mini)
