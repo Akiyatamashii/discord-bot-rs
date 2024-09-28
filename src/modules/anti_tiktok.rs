@@ -51,7 +51,7 @@ pub async fn tiktok_refuse(
     // 建立一個執行緒安全的隨機數生成器
     let rng = Arc::new(Mutex::new(ChaCha12Rng::from_entropy()));
 
-    if msg.content.contains("xiaohongshu") && msg.content.contains("http") {
+    if msg.content.contains("xhslink.com") {
         msg.reply(ctx, "# 小紅書仔閉嘴").await.unwrap();
         return;
     }
