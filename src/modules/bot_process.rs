@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use colored::Colorize;
 use serenity::all::{CommandInteraction, Context, Message};
 
@@ -32,6 +34,13 @@ pub async fn interaction_process(handler: &Handler, ctx: &Context, command: &Com
         // 處理 info 命令
         "info" => {
             commands::base::info::run(ctx, command, &command.data.options()).await;
+            true
+        }
+        // 處理 update 命令（查看更新日誌）
+        "update" => {
+            commands::base::update::run(ctx, command, &command.data.options())
+                .await
+                .unwrap();
             true
         }
         // 處理 look 命令（查看提醒）
@@ -154,6 +163,20 @@ pub async fn interaction_process(handler: &Handler, ctx: &Context, command: &Com
             commands::cash::run(ctx, command, &command.data.options()).await;
             true
         }
+        // 處理 tiktok_msg_add 命令（添加拒絕 TikTok 訊息）
+        "tiktok_msg_add" => {
+            let tiktok_refuse_msg = Arc::clone(&handler.tiktok_refuse_msg);
+            if let Ok(msg) = commands::tiktok_refuse::tiktok_msg_add::run(
+                &command.data.options(),
+                tiktok_refuse_msg,
+            )
+            .await
+            {
+                interaction_response(ctx, command, msg, true).await;
+            }
+            true
+        }
+
         // 未知命令
         _ => false,
     };
