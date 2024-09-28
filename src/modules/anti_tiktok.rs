@@ -58,6 +58,6 @@ pub async fn tiktok_refuse(
             .unwrap_or(&"抖音仔閉嘴".to_string())
             .to_string();
 
-        msg.reply(ctx, &selected_msg).await.unwrap();
+        msg.reply(ctx, &format!("# {}", selected_msg)).await.unwrap();
     }
 }
