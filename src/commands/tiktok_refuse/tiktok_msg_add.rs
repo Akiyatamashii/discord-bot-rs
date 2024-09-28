@@ -24,17 +24,17 @@ pub async fn run<'a>(
     let message = options.iter().find(|opt| opt.name == "message");
     let msg = if let Some(msg) = message {
         if let ResolvedValue::String(message) = msg.value {
-            message
+            message.to_string()
         } else {
-            &"未輸入拒絕訊息".to_string()
+            "未輸入拒絕訊息".to_string()
         }
     } else {
-        &"未輸入拒絕訊息".to_string()
+        "未輸入拒絕訊息".to_string()
     };
 
     let tiktok_refuse_msg = Arc::clone(&tiktok_refuse_msg);
 
-    if let Err(err) = add_tiktok_refuse_msg(msg, tiktok_refuse_msg).await {
+    if let Err(err) = add_tiktok_refuse_msg(&msg, tiktok_refuse_msg).await {
         println!("Add TikTok Refuse Msg Error: {}", err);
         return Ok("增加拒絕訊息失敗".to_string());
     }
