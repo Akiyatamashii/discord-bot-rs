@@ -15,12 +15,12 @@ use tokio::sync::{Notify, RwLock};
 
 mod commands;
 mod modules;
-use modules::bot_process::{interaction_process, prefix_command_process};
+use modules::{bot_process::{interaction_process, prefix_command_process}, tiktok_refuse::load_tiktok_refuse_msg};
 use modules::func::{
-    ensure_guild_id_file_exists, error_output, load_reminders_from_file,
+    ensure_file_exists, error_output, load_reminders_from_file,
     register_commands_guild_ids, system_output,
 };
-
+use modules::tiktok_refuse::tiktok_refuse;
 #[derive(Serialize, Deserialize, Clone, Debug)]
 struct Reminder {
     //提醒器結構
@@ -39,6 +39,12 @@ struct Handler {
     reminders: Reminders,             // 存儲所有提醒
     trigger_notify: Arc<Notify>,      // 用於觸發提醒檢查的通知器
     prefix: Regex,                    // 用於匹配命令前綴的正則表達式
+    tiktok_refuse_msg: Arc<RwLock<Vec<String>>>,   // 用於拒絕TikTok消息的回覆
+}
+
+impl Handler {
+    
+
 }
 
 #[async_trait]
@@ -53,7 +59,9 @@ impl EventHandler for Handler {
         // 檢查消息是否匹配命令前綴
         if self.prefix.is_match(&msg.content) {
             prefix_command_process(&ctx, &msg).await
-        }
+        };
+
+        tiktok_refuse(&ctx, &msg, Arc::clone(&self.tiktok_refuse_msg)).await;
     }
 
     // 處理交互命令
@@ -82,8 +90,8 @@ impl EventHandler for Handler {
         ctx.set_activity(Some(ActivityData::playing("記憶大賽....")));
         
         // 確保存儲伺服器 ID 的文件存在
-        let file_path = "guild_id.txt";
-        ensure_guild_id_file_exists(file_path).unwrap();
+        let file_path = "assets/guild_id.txt";
+        ensure_file_exists(file_path).unwrap();
 
         // 註冊命令到指定的伺服器
         register_commands_guild_ids(&ctx).await;
@@ -126,6 +134,7 @@ async fn main() {
         reminders: Arc::clone(&reminders),
         trigger_notify: Arc::new(Notify::new()),
         prefix,
+        tiktok_refuse_msg: Arc::new(RwLock::new(load_tiktok_refuse_msg())),
     };
 
     // 創建 Discord 客戶端

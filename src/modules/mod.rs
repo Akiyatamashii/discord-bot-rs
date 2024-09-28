@@ -7,6 +7,9 @@ pub mod func;
 // 引入機器人處理邏輯的模塊
 pub mod bot_process;
 
+// 引入拒絕TikTok的模塊
+pub mod tiktok_refuse;
+
 // 這個模塊文件定義了機器人的核心功能結構
 // 每個子模塊包含特定功能的實現：
 // - reminder: 處理提醒相關的功能，可能包括定時任務的執行邏輯
