@@ -1,6 +1,6 @@
 [package]
 name = "discord-bot-rs" # 項目名稱
-version = "0.7.5"       # 項目版本
+version = "0.7.6"       # 項目版本
 edition = "2021"        # Rust 版本
 
 [dependencies] # 項目依賴
@@ -42,4 +42,3 @@ opt-level = 0 # 優化等級（0 表示沒有優化）
 
 [profile.release] # 發佈模式的設置
 opt-level = 3 # 優化等級（3 表示最高優化）
-
