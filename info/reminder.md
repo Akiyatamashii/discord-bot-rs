@@ -1,7 +1,7 @@
 > ### **提醒器 ( Reminder )**
 > 
 > 提醒器能讓群組成員設置提醒，在指定時間提醒群組成員。
->  
+> 
 > - /reminder [weekdays] [time] [message]：設置提醒
 >  - weekdays：每週的哪幾天要通知，格式：d,d,..
 >  - time：提醒時間，格式：HH:MM
