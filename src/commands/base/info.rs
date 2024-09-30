@@ -60,7 +60,11 @@ async fn info(ctx: &Context, command: &CommandInteraction) {
     // Read the content of the info file
     // 讀取 info 文件的內容
     let content = match fs::read_to_string(file_path) {
-        Ok(ctx) => ctx.lines().map(|line| format!("> {}", line)).collect::<Vec<String>>().join("\n"),
+        Ok(ctx) => ctx
+            .lines()
+            .map(|line| format!("> {}", line).replace("+", "-"))
+            .collect::<Vec<String>>()
+            .join("\n"),
         Err(err) => {
             println!("{} Failed to read info file:{}", error_output(), err);
             let data = CreateInteractionResponseMessage::new().content(">> 讀取資訊失敗");
@@ -114,7 +118,7 @@ async fn info_with_type(ctx: &Context, command: &CommandInteraction, info_type: 
     let content = match fs::read_to_string(file_path) {
         Ok(ctx) => ctx
             .lines()
-            .map(|line| format!("> {}", line))
+            .map(|line| format!("> {}", line).replace("+", "-"))
             .collect::<Vec<String>>()
             .join("\n"),
         Err(err) => {

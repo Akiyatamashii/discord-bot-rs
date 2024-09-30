@@ -107,7 +107,7 @@ fn read_latest_update_log(update_dir: &str) -> Vec<String> {
                 if reader.read_to_string(&mut content).is_ok() {
                     let formatted_content = content
                         .lines()
-                        .map(|line| format!("> {}", line))
+                        .map(|line| format!("> {}", line).replace("+", "-"))
                         .collect::<Vec<String>>()
                         .join("\n");
                     all_logs.push(formatted_content);
@@ -149,7 +149,7 @@ fn read_all_update_logs(update_dir: &str) -> Vec<String> {
                     // 將每一行的開頭加入 "> "
                     let formatted_content = content
                         .lines()
-                        .map(|line| format!("> {}", line))
+                        .map(|line| format!("> {}", line).replace("+", "-"))
                         .collect::<Vec<String>>()
                         .join("\n");
                     all_logs.push(formatted_content);
