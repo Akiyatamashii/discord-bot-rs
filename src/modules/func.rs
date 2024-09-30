@@ -186,10 +186,7 @@ fn save_guild_id_to_file(guild_id: &GuildId) -> io::Result<()> {
     let file_path = "assets/guild_id.txt";
 
     // 讀取已存在的 guild_id
-    let existing_ids = match fs::read_to_string(file_path) {
-        Ok(content) => content,
-        Err(_) => String::new(),
-    };
+    let existing_ids = fs::read_to_string(file_path).unwrap_or_default();
 
     if !existing_ids.contains(&guild_id.to_string()) {
         // 如果文件中不包含當前 guild_id，則寫入文件
