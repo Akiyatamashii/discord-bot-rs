@@ -4,11 +4,11 @@
 
 * /info：查看機器人基本資訊
 * /info [type]：查看功能詳細指令
-  + Ex：/info reminder
+  - Ex：/info reminder
 * /ping：測試連線
 * /update：查看更新日誌
-  + all：查看所有更新日誌 (不可與 public 選項同時使用)
-  + public：是否公開 (不可與 all 選項同時使用)
-  + Ex：/update (查看最新日誌訊息)
-  + Ex：/update all:true (查看所有更新日誌)
-  + Ex：/update public:true (公開發送更新日誌)
+  - all：查看所有更新日誌 (不可與 public 選項同時使用)
+  - public：是否公開 (不可與 all 選項同時使用)
+  - Ex：/update (查看最新日誌訊息)
+  - Ex：/update all:true (查看所有更新日誌)
+  - Ex：/update public:true (公開發送更新日誌)
