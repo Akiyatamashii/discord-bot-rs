@@ -56,11 +56,11 @@ pub async fn run<'a>(
 async fn info(ctx: &Context, command: &CommandInteraction) {
     let mut file_path = info_path();
     file_path.push_str("info.md");
-    
+
     // Read the content of the info file
     // 讀取 info 文件的內容
     let content = match fs::read_to_string(file_path) {
-        Ok(ctx) => ctx,
+        Ok(ctx) => ctx.lines().map(|line| format!("> {}", line)).collect::<Vec<String>>().join("\n"),
         Err(err) => {
             println!("{} Failed to read info file:{}", error_output(), err);
             let data = CreateInteractionResponseMessage::new().content(">> 讀取資訊失敗");
@@ -71,7 +71,7 @@ async fn info(ctx: &Context, command: &CommandInteraction) {
             return;
         }
     };
-    
+
     // Send the response with the file content
     // 發送包含文件內容的回應
     let data = CreateInteractionResponseMessage::new().content(content);
@@ -86,7 +86,7 @@ async fn info(ctx: &Context, command: &CommandInteraction) {
 async fn info_with_type(ctx: &Context, command: &CommandInteraction, info_type: &str) {
     let fold_path = info_path();
     let file_name = format!("{}.md", info_type);
-    
+
     // Check if the file exists
     // 檢查文件是否存在
     let file_exists = fs::read_dir(fold_path)
@@ -112,7 +112,11 @@ async fn info_with_type(ctx: &Context, command: &CommandInteraction, info_type: 
     // Read the content of the specific info file
     // 讀取特定 info 文件的內容
     let content = match fs::read_to_string(file_path) {
-        Ok(ctx) => ctx,
+        Ok(ctx) => ctx
+            .lines()
+            .map(|line| format!("> {}", line))
+            .collect::<Vec<String>>()
+            .join("\n"),
         Err(err) => {
             println!("{} Failed to read info file:{}", error_output(), err);
             let data = CreateInteractionResponseMessage::new().content(">> 讀取資訊失敗");
@@ -123,7 +127,7 @@ async fn info_with_type(ctx: &Context, command: &CommandInteraction, info_type: 
             return;
         }
     };
-    
+
     // Send the response with the file content
     // 發送包含文件內容的回應
     let data = CreateInteractionResponseMessage::new().content(content);

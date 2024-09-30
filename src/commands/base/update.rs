@@ -103,18 +103,19 @@ fn read_latest_update_log(update_dir: &str) -> Vec<String> {
         if let Some(latest_file) = file_paths.last() {
             if let Ok(file) = File::open(latest_file) {
                 let mut reader = BufReader::new(file);
-                let mut content = Vec::new();
-                if reader.read_to_end(&mut content).is_ok() {
-                    if let Ok(utf8_content) = String::from_utf8(content) {
-                        all_logs.push(utf8_content);
-                    } else {
-                        all_logs.push("無法解析最新的更新日誌為UTF-8格式".to_string());
-                    }
+                let mut content = String::new();
+                if reader.read_to_string(&mut content).is_ok() {
+                    let formatted_content = content
+                        .lines()
+                        .map(|line| format!("> {}", line))
+                        .collect::<Vec<String>>()
+                        .join("\n");
+                    all_logs.push(formatted_content);
                 } else {
-                    all_logs.push("無法讀取最新的更新日誌".to_string());
+                    all_logs.push("> 無法讀取最新的更新日誌".to_string());
                 }
             } else {
-                all_logs.push("無法打開最新的更新日誌文件".to_string());
+                all_logs.push("> 無法打開最新的更新日誌文件".to_string());
             }
         } else {
             all_logs.push("沒有找到更新日誌文件".to_string());
@@ -144,7 +145,14 @@ fn read_all_update_logs(update_dir: &str) -> Vec<String> {
                 let mut reader = BufReader::new(file);
                 let mut content = String::new();
                 if reader.read_to_string(&mut content).is_ok() {
-                    all_logs.push(content);
+                    // add "> " to the beginning of each line
+                    // 將每一行的開頭加入 "> "
+                    let formatted_content = content
+                        .lines()
+                        .map(|line| format!("> {}", line))
+                        .collect::<Vec<String>>()
+                        .join("\n");
+                    all_logs.push(formatted_content);
                 }
             }
         }
