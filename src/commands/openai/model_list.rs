@@ -6,6 +6,7 @@ use std::collections::HashMap;
 
 use crate::modules::func::openai_config;
 
+// Register the model_list command
 // 註冊 model_list 命令
 pub fn register() -> CreateCommand {
     CreateCommand::new("model_list")
@@ -22,8 +23,10 @@ pub fn register() -> CreateCommand {
         )
 }
 
+// Main function to execute the model_list command
 // 執行 model_list 命令的主函數
 pub async fn run<'a>(option: &'a [ResolvedOption<'a>]) -> String {
+    // Get the value of model_type from options, default to 0 (all models) if not selected
     // 從選項中獲取 model_type 的值，如果沒有選擇則默認為 0（全部模型）
     let model_type = option
         .iter()
@@ -37,15 +40,19 @@ pub async fn run<'a>(option: &'a [ResolvedOption<'a>]) -> String {
         })
         .unwrap_or(0);
 
+    // Create OpenAI client
     // 創建 OpenAI 客戶端
     let client = Client::with_config(openai_config());
 
+    // Get the list of models
     // 獲取模型列表
     match client.models().list().await {
         Ok(models) => {
+            // Create a HashMap to store different types of models
             // 創建一個 HashMap 來存儲不同類型的模型
             let mut model_groups: HashMap<&str, Vec<String>> = HashMap::new();
 
+            // Group models by type
             // 將模型按類型分組
             for model in models.data.iter() {
                 let model_type_str = get_model_type(&model.id);
@@ -57,6 +64,7 @@ pub async fn run<'a>(option: &'a [ResolvedOption<'a>]) -> String {
 
             let mut msg = String::new();
 
+            // Define the output order of model types
             // 定義模型類型的輸出順序
             let order = [
                 "自然語言模型",
@@ -67,14 +75,17 @@ pub async fn run<'a>(option: &'a [ResolvedOption<'a>]) -> String {
                 "其他模型",
             ];
 
+            // Output models in order
             // 按順序輸出模型
             for (index, &group) in order.iter().enumerate() {
+                // Filter output based on model_type
                 // 根據 model_type 過濾輸出
                 if model_type == 0 || model_type as usize == index + 1 {
                     if let Some(models) = model_groups.get(group) {
                         let mut models = models.clone();
                         models.sort();
 
+                        // Special handling for natural language models, place chatgpt models after gpt models
                         // 特殊處理自然語言模型，將 chatgpt 模型放在 gpt 模型後面
                         if group == "自然語言模型" {
                             let chatgpt_models: Vec<String> = models
@@ -90,8 +101,10 @@ pub async fn run<'a>(option: &'a [ResolvedOption<'a>]) -> String {
                             models.splice(last_gpt_index + 1..last_gpt_index + 1, chatgpt_models);
                         }
 
+                        // Add model type title
                         // 添加模型類型標題
                         msg.push_str(&format!("V {} V\n", group));
+                        // Add all models of this type
                         // 添加該類型的所有模型
                         for model in models {
                             msg.push_str(&format!("{}\n", model));
@@ -101,6 +114,7 @@ pub async fn run<'a>(option: &'a [ResolvedOption<'a>]) -> String {
                 }
             }
 
+            // If no matching models are found, return a prompt message
             // 如果沒有找到符合條件的模型，返回提示信息
             if msg.is_empty() {
                 "沒有找到符合條件的模型".to_string()
@@ -115,6 +129,7 @@ pub async fn run<'a>(option: &'a [ResolvedOption<'a>]) -> String {
     }
 }
 
+// Determine the model type based on the model name
 // 根據模型名稱判斷模型類型
 fn get_model_type(model: &str) -> &str {
     if model.starts_with("gpt") || model.starts_with("chatgpt") || model.starts_with("text-davinci")

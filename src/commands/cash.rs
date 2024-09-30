@@ -12,6 +12,7 @@ use serenity::all::{
     ResolvedValue, UserId,
 };
 
+// Define Cash struct to store individual debt information
 // 定義 Cash 結構體，用於存儲單筆欠款信息
 #[derive(Deserialize, Serialize)]
 struct Cash {
@@ -22,11 +23,13 @@ struct Cash {
     ps: String,
 }
 
+// Define CashList struct to store all debt information
 // 定義 CashList 結構體，用於存儲所有欠款信息
 #[derive(Deserialize, Serialize)]
 struct CashList(HashMap<GuildId, Vec<Cash>>);
 
 impl CashList {
+    // Create a new CashList instance
     // 創建新的 CashList 實例
     fn new() -> Self {
         let list: HashMap<GuildId, Vec<Cash>> = HashMap::new();
@@ -34,6 +37,7 @@ impl CashList {
     }
 }
 
+// Implement Deref trait to allow direct use of HashMap methods on CashList
 // 實現 Deref trait，允許 CashList 直接使用 HashMap 的方法
 impl Deref for CashList {
     type Target = HashMap<GuildId, Vec<Cash>>;
@@ -42,6 +46,7 @@ impl Deref for CashList {
     }
 }
 
+// Implement DerefMut trait to allow direct use of mutable HashMap methods on CashList
 // 實現 DerefMut trait，允許 CashList 直接使用 HashMap 的可變方法
 impl DerefMut for CashList {
     fn deref_mut(&mut self) -> &mut Self::Target {
@@ -49,6 +54,7 @@ impl DerefMut for CashList {
     }
 }
 
+// Register the cash command
 // 註冊 cash 命令
 pub fn register() -> CreateCommand {
     CreateCommand::new("cash")
@@ -87,6 +93,7 @@ pub fn register() -> CreateCommand {
         ))
 }
 
+// Main function to execute the cash command
 // 執行 cash 命令的主函數
 pub async fn run<'a>(
     ctx: &Context,
@@ -147,6 +154,7 @@ pub async fn run<'a>(
             _ => None,
         });
 
+    // Execute the corresponding operation based on the command type
     // 根據命令類型執行相應的操作
     match command_type {
         "look" => look(ctx, command).await,
@@ -184,6 +192,7 @@ pub async fn run<'a>(
     }
 }
 
+// View the debt list
 // 查看欠款列表
 async fn look(ctx: &Context, command: &CommandInteraction) {
     let cash_lists = match load_cash_data() {
@@ -227,6 +236,7 @@ async fn look(ctx: &Context, command: &CommandInteraction) {
     command.create_response(&ctx.http, builder).await.ok();
 }
 
+// Add a new debt record
 // 添加新的欠款記錄
 async fn add(ctx: &Context, command: &CommandInteraction, cash: Cash) {
     let guild_id = command.guild_id.unwrap();
@@ -254,6 +264,7 @@ async fn add(ctx: &Context, command: &CommandInteraction, cash: Cash) {
     }
 }
 
+// Delete a specified debt record
 // 刪除指定的欠款記錄
 async fn del(ctx: &Context, command: &CommandInteraction, index: usize) {
     let mut cash_lists = match load_cash_data().ok() {
@@ -315,6 +326,7 @@ async fn del(ctx: &Context, command: &CommandInteraction, index: usize) {
     }
 }
 
+// Save debt data to file
 // 保存欠款數據到文件
 fn save_cash_data(cash_list: &CashList) -> Result<(), Box<dyn Error + Send + Sync>> {
     let json_content = serde_json::to_string(cash_list)?;
@@ -322,6 +334,7 @@ fn save_cash_data(cash_list: &CashList) -> Result<(), Box<dyn Error + Send + Syn
     Ok(())
 }
 
+// Load debt data from file
 // 從文件加載欠款數據
 fn load_cash_data() -> Result<CashList, Box<dyn Error + Send + Sync>> {
     let json_content = fs::read_to_string("./cash.json")?;

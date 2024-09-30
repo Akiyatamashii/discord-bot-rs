@@ -7,6 +7,8 @@ use serenity::all::{
 
 use crate::modules::func::{error_output, info_path};
 
+// Register the info command
+// 註冊 info 命令
 pub fn register() -> CreateCommand {
     CreateCommand::new("info")
         .description("獲取機器人資訊與指令列表")
@@ -20,11 +22,15 @@ pub fn register() -> CreateCommand {
         )
 }
 
+// Run the info command
+// 運行 info 命令
 pub async fn run<'a>(
     ctx: &Context,
     command: &CommandInteraction,
     option: &'a [ResolvedOption<'a>],
 ) {
+    // Find the "type" option from the input options
+    // 從輸入選項中找到 "type" 選項
     let info_type_result = option.iter().find(|opt| opt.name == "type");
     let info_type = if let Some(info_type) = info_type_result {
         if let ResolvedValue::String(info_type) = info_type.value {
@@ -36,6 +42,8 @@ pub async fn run<'a>(
         ""
     };
 
+    // Call the appropriate function based on the info_type
+    // 根據 info_type 調用適當的函數
     if info_type.is_empty() {
         info(ctx, command).await
     } else {
@@ -43,9 +51,14 @@ pub async fn run<'a>(
     }
 }
 
+// Handle the info command without a specific type
+// 處理沒有特定類型的 info 命令
 async fn info(ctx: &Context, command: &CommandInteraction) {
     let mut file_path = info_path();
     file_path.push_str("info.md");
+    
+    // Read the content of the info file
+    // 讀取 info 文件的內容
     let content = match fs::read_to_string(file_path) {
         Ok(ctx) => ctx,
         Err(err) => {
@@ -58,6 +71,9 @@ async fn info(ctx: &Context, command: &CommandInteraction) {
             return;
         }
     };
+    
+    // Send the response with the file content
+    // 發送包含文件內容的回應
     let data = CreateInteractionResponseMessage::new().content(content);
     let builder = CreateInteractionResponse::Message(data);
     if let Err(err) = command.create_response(&ctx.http, builder).await {
@@ -65,9 +81,14 @@ async fn info(ctx: &Context, command: &CommandInteraction) {
     }
 }
 
+// Handle the info command with a specific type
+// 處理有特定類型的 info 命令
 async fn info_with_type(ctx: &Context, command: &CommandInteraction, info_type: &str) {
     let fold_path = info_path();
     let file_name = format!("{}.md", info_type);
+    
+    // Check if the file exists
+    // 檢查文件是否存在
     let file_exists = fs::read_dir(fold_path)
         .map(|rd| {
             rd.filter_map(Result::ok)
@@ -88,6 +109,8 @@ async fn info_with_type(ctx: &Context, command: &CommandInteraction, info_type: 
     let mut file_path = info_path();
     file_path.push_str(format!("{}.md", info_type).as_str());
 
+    // Read the content of the specific info file
+    // 讀取特定 info 文件的內容
     let content = match fs::read_to_string(file_path) {
         Ok(ctx) => ctx,
         Err(err) => {
@@ -100,6 +123,9 @@ async fn info_with_type(ctx: &Context, command: &CommandInteraction, info_type: 
             return;
         }
     };
+    
+    // Send the response with the file content
+    // 發送包含文件內容的回應
     let data = CreateInteractionResponseMessage::new().content(content);
     let builder = CreateInteractionResponse::Message(data);
     if let Err(err) = command.create_response(&ctx.http, builder).await {
