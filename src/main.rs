@@ -121,8 +121,8 @@ impl EventHandler for Handler {
     }
 
     async fn voice_state_update(&self, ctx: Context, _old: Option<VoiceState>, new: VoiceState) {
-        let ban_list = self.ban_list.read().await;
-        if ban_list.len() == 0 {
+        let ban_list = self.ban_list.read().await.clone();
+        if ban_list.is_empty() {
             return;
         }
         let baned_member = ban_list.iter().find(|(id, _time)| *id == new.user_id);
