@@ -48,8 +48,10 @@ pub async fn run<'a>(
         .cloned();
 
     if baned_member.is_some() {
+        println!("unban");
         drop(ban_list_value); // 釋放寫鎖
         unban(ban_list.clone(), member_id).await;
+        println!("unban finish");
         format!("已將{}移出封禁名單", member_name)
     } else {
         "該用戶不在封禁名單中".to_string()
