@@ -1,9 +1,13 @@
 use serenity::all::{
-    CommandInteraction, CommandOptionType, Context, CreateCommand, CreateCommandOption, ResolvedOption, ResolvedValue, UserId
+    CommandInteraction, CommandOptionType, Context, CreateCommand, CreateCommandOption, EditMember,
+    ResolvedOption, ResolvedValue, UserId,
 };
 
 use crate::{
-    modules::{func::{check_permission, ensure_file_exists}, reminder::TW},
+    modules::{
+        func::{check_permission, ensure_file_exists},
+        reminder::TW,
+    },
     BanList,
 };
 
@@ -23,7 +27,12 @@ pub fn register() -> CreateCommand {
         )
 }
 
-pub async fn run<'a>(ctx: &Context, command: &CommandInteraction, ban_list: BanList, options: &[ResolvedOption<'a>]) -> String {
+pub async fn run<'a>(
+    ctx: &Context,
+    command: &CommandInteraction,
+    ban_list: BanList,
+    options: &[ResolvedOption<'a>],
+) -> String {
     if !check_permission(ctx, command).await {
         return "你沒有許可權使用指令".to_string();
     }
@@ -57,6 +66,10 @@ pub async fn run<'a>(ctx: &Context, command: &CommandInteraction, ban_list: BanL
     let now = chrono::Utc::now().with_timezone(&*TW).time();
     let ban_time = now + chrono::Duration::minutes(mins);
     ban_list.push((member_id, ban_time));
+
+    let guild_id = command.guild_id.unwrap();
+    let builder = EditMember::new().mute(true);
+    guild_id.edit_member(ctx, member_id, builder).await.unwrap();
 
     ensure_file_exists("assets/ban_list.json").unwrap();
     let list_json = serde_json::to_string(&*ban_list).unwrap();

@@ -134,7 +134,7 @@ impl EventHandler for Handler {
             } else {
                 println!("{}", "disconnect baned member".to_string().yellow());
                 let guild_id = new.guild_id.unwrap();
-                let builder = EditMember::new().disconnect_member();
+                let builder = EditMember::new().mute(true);
                 guild_id
                     .edit_member(ctx, baned_member.unwrap().0, builder)
                     .await
