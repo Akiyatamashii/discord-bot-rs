@@ -11,14 +11,20 @@ use crate::modules::func::{error_output, info_path};
 // 註冊 info 命令
 pub fn register() -> CreateCommand {
     CreateCommand::new("info")
-        .description("獲取機器人資訊與指令列表")
+        .description("get bot info and command list")
+        .description_localized("zh-TW", "獲取機器人資訊與指令列表")
         .add_option(
-            CreateCommandOption::new(CommandOptionType::String, "type", "功能類型選擇")
-                .add_string_choice("common", "common")
-                .add_string_choice("reminder", "reminder")
-                .add_string_choice("ai", "ai")
-                .add_string_choice("cash", "cash")
-                .add_string_choice("anti_tiktok", "anti_tiktok"),
+            CreateCommandOption::new(
+                CommandOptionType::String,
+                "type",
+                "what part of info do you want to see",
+            )
+            .description_localized("zh-TW", "選擇要查看的資訊類型")
+            .add_string_choice("common", "common")
+            .add_string_choice("reminder", "reminder")
+            .add_string_choice("ai", "ai")
+            .add_string_choice("cash", "cash")
+            .add_string_choice("anti_tiktok", "anti_tiktok"),
         )
 }
 

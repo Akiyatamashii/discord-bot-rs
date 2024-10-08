@@ -10,11 +10,14 @@ pub mod ping;
 // 引入查看更新日誌的模塊
 pub mod update;
 
+
+
 // This module file defines the basic command structure of the bot
 // Each sub-module contains commands for specific functionalities:
 // - info: handles commands for displaying bot or server information
 // - ping: handles commands for checking bot response time
 // - update: handles commands for viewing update logs
+
 
 // These basic commands are typically used for:
 // 1. Checking if the bot is online and responding normally (ping)

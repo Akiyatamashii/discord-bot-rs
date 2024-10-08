@@ -165,10 +165,15 @@ pub async fn register_commands(ctx: &Context, guild_id: &GuildId, for_guilds: bo
                 commands::openai::chat::register(),
                 commands::openai::image::register(),
                 commands::openai::model_list::register(),
+                // Ban related commands
+                // 封禁相關命令
+                commands::ban::add_ban::register(),
+                commands::ban::un_ban::register(),
                 // Other feature commands
                 // 其他功能命令
                 commands::cash::register(),
                 commands::anti_tiktok::tiktok_msg_add::register(),
+
             ],
         )
         .await;

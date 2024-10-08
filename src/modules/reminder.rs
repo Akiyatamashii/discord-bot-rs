@@ -16,7 +16,7 @@ use tokio::{
 
 // Define Taipei timezone
 // 定義台北時區
-static TW: Lazy<Tz> = Lazy::new(|| "Asia/Taipei".parse().unwrap());
+pub static TW: Lazy<Tz> = Lazy::new(|| "Asia/Taipei".parse().unwrap());
 
 // Define reminder storage structure
 // 定義提醒存儲結構

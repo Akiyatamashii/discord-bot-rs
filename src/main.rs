@@ -1,12 +1,13 @@
 use std::{collections::HashMap, env, sync::Arc};
 
-use chrono::{NaiveDate, NaiveTime, Weekday};
+use chrono::{NaiveDate, NaiveTime, Utc, Weekday};
 use colored::*;
+use commands::ban::un_ban::unban;
 use dotenvy::dotenv;
 use regex::Regex;
 use serde::{Deserialize, Serialize};
 use serenity::{
-    all::{ActivityData, ChannelId, GuildId, Interaction},
+    all::{ActivityData, ChannelId, EditMember, GuildId, Interaction, UserId, VoiceState},
     async_trait,
     model::{channel::Message, gateway::Ready},
     prelude::*,
@@ -15,7 +16,6 @@ use tokio::sync::{Notify, RwLock};
 
 mod commands;
 mod modules;
-use modules::anti_tiktok::tiktok_refuse;
 use modules::func::{
     ensure_file_exists, error_output, load_reminders_from_file, register_commands_guild_ids,
     system_output,
@@ -24,6 +24,7 @@ use modules::{
     anti_tiktok::load_tiktok_refuse_msg,
     bot_process::{interaction_process, prefix_command_process},
 };
+use modules::{anti_tiktok::tiktok_refuse, reminder::TW};
 
 // Define the Reminder structure
 // 定義 Reminder 結構
@@ -46,6 +47,8 @@ struct Reminder {
 // Define Reminders type for storing reminders for all servers and channels
 // 定義 Reminders 類型，用於存儲所有伺服器和頻道的提醒
 type Reminders = Arc<RwLock<HashMap<GuildId, HashMap<ChannelId, Vec<Reminder>>>>>;
+type BanList = Arc<RwLock<Vec<(UserId, NaiveTime)>>>;
+type TiktokRefuseMsg = Arc<RwLock<Vec<String>>>;
 
 // Define the Handler structure
 // 定義 Handler 結構
@@ -62,7 +65,10 @@ struct Handler {
     prefix: Regex,
     // Replies for refusing TikTok messages
     // 用於拒絕TikTok消息的回覆
-    tiktok_refuse_msg: Arc<RwLock<Vec<String>>>,
+    tiktok_refuse_msg: TiktokRefuseMsg,
+    // Ban list
+    // 封禁列表
+    ban_list: BanList,
 }
 
 impl Handler {}
@@ -111,6 +117,28 @@ impl EventHandler for Handler {
             // Process the interaction command
             // 處理交互命令
             interaction_process(self, &ctx, &command).await;
+        }
+    }
+
+    async fn voice_state_update(&self, ctx: Context, _old: Option<VoiceState>, new: VoiceState) {
+        let ban_list = self.ban_list.read().await;
+        if ban_list.len() == 0 {
+            return;
+        }
+        let baned_member = ban_list.iter().find(|(id, _time)| *id == new.user_id);
+        if baned_member.is_some() {
+            let now = Utc::now().with_timezone(&*TW).time();
+            if baned_member.unwrap().1 > now {
+                drop(ban_list);
+                unban(self.ban_list.clone(), new.user_id).await;
+            } else {
+                let guild_id = new.guild_id.unwrap();
+                let builder = EditMember::new().disconnect_member();
+                guild_id
+                    .edit_member(ctx, baned_member.unwrap().0, builder)
+                    .await
+                    .unwrap();
+            }
         }
     }
 
@@ -176,6 +204,7 @@ async fn main() {
         trigger_notify: Arc::new(Notify::new()),
         prefix,
         tiktok_refuse_msg: Arc::new(RwLock::new(load_tiktok_refuse_msg())),
+        ban_list: Arc::new(RwLock::new(Vec::new())),
     };
 
     // Create Discord client
