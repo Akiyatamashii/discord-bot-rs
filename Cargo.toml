@@ -1,6 +1,6 @@
 [package]
 name = "discord-bot-rs" # 項目名稱
-version = "0.7.6"       # 項目版本
+version = "0.7.7"       # 項目版本
 edition = "2021"        # Rust 版本
 
 [dependencies] # 項目依賴
