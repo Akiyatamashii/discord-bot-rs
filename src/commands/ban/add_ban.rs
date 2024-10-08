@@ -71,13 +71,14 @@ pub async fn run<'a>(
     let ban_time = now + chrono::Duration::minutes(mins);
     ban_list.push((member_id, ban_time));
 
-    let guild_id = command.guild_id.unwrap();
-    let builder = EditMember::new().mute(true);
-    guild_id.edit_member(ctx, member_id, builder).await.unwrap();
-
     ensure_file_exists("assets/ban_list.json").unwrap();
     let list_json = serde_json::to_string(&*ban_list).unwrap();
     std::fs::write("assets/ban_list.json", list_json).unwrap();
+    
+    let guild_id = command.guild_id.unwrap();
+    let builder = EditMember::new().mute(true);
+    guild_id.edit_member(ctx, member_id, builder).await.unwrap();
+    drop(ban_list);
 
     format!("成功將{}加入封禁名單，封禁時間為{}分鐘", member_name, mins)
 }

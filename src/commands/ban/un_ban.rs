@@ -40,21 +40,38 @@ pub async fn run<'a>(
         return "你不能解封你自己".to_string();
     }
 
+    println!("正在獲取封禁列表...");
     let ban_list_value = ban_list.write().await;
+    println!("已獲取封禁列表");
+
+    println!("正在查找被封禁成員...");
     let baned_member = ban_list_value
         .iter()
         .find(|user| user.0 == member_id)
         .cloned();
+    println!("查找完成");
 
     if baned_member.is_some() {
-        println!("unban");
+        println!("正在釋放寫鎖...");
         drop(ban_list_value); // 釋放寫鎖
+        println!("寫鎖已釋放");
+
+        println!("正在執行解封操作...");
         unban(ban_list.clone(), member_id).await;
-        println!("unban finish");
+        println!("解封操作完成");
+
+        println!("正在獲取公會ID...");
         let guild_id = command.guild_id.unwrap();
+        println!("已獲取公會ID");
+
+        println!("正在創建編輯成員的建構器...");
         let builder = EditMember::new().mute(false);
+        println!("建構器已創建");
+
+        println!("正在編輯成員狀態...");
         guild_id.edit_member(ctx, member_id, builder).await.unwrap();
-        println!("unmute");
+        println!("成員狀態已更新");
+
         format!("已將{}移出封禁名單", member_name)
     } else {
         "該用戶不在封禁名單中".to_string()
