@@ -49,6 +49,10 @@ pub async fn run<'a>(
         (UserId::default(), "".to_string())
     };
 
+    if member_id == UserId::from(412803325768237066) {
+        return "你不能封禁豆腐".to_string();
+    }
+
     let mins = if let Some(get_mins) = mins {
         if let ResolvedValue::Integer(mins) = get_mins.value {
             mins
