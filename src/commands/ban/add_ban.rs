@@ -74,7 +74,9 @@ pub async fn run<'a>(
     ensure_file_exists("assets/ban_list.json").unwrap();
     let list_json = serde_json::to_string(&*ban_list).unwrap();
     std::fs::write("assets/ban_list.json", list_json).unwrap();
-    
+
+    println!("ban id: {}", member_id);
+
     let guild_id = command.guild_id.unwrap();
     let builder = EditMember::new().mute(true);
     guild_id.edit_member(ctx, member_id, builder).await.unwrap();

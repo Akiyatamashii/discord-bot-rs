@@ -40,6 +40,8 @@ pub async fn run<'a>(
         return "你不能解封你自己".to_string();
     }
 
+    println!("unban id: {}", member_id);
+
     println!("正在獲取封禁列表...");
     let ban_list_value = ban_list.write().await;
     println!("已獲取封禁列表");
