@@ -81,9 +81,13 @@ pub async fn run<'a>(
 }
 
 pub async fn unban(ban_list: BanList, member_id: UserId) {
-    let mut ban_list = ban_list.write().await;
-    ban_list.retain(|user| user.0 != member_id);
-    let ban_list_clone = ban_list.clone();
-    let json = serde_json::to_string(&ban_list_clone).unwrap();
-    std::fs::write("assets/ban_list.json", json).unwrap();
+    let mut ban_list_guard = ban_list.write().await;
+    ban_list_guard.retain(|user| user.0 != member_id);
+    let json = serde_json::to_string(&*ban_list_guard).unwrap();
+    drop(ban_list_guard);
+    tokio::spawn(async move {
+        if let Err(e) = tokio::fs::write("assets/ban_list.json", json).await {
+            eprintln!("寫入 ban_list.json 時發生錯誤: {}", e);
+        }
+    });
 }
