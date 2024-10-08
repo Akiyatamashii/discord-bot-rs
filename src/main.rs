@@ -128,10 +128,11 @@ impl EventHandler for Handler {
         let baned_member = ban_list.iter().find(|(id, _time)| *id == new.user_id);
         if baned_member.is_some() {
             let now = Utc::now().with_timezone(&*TW).time();
-            if baned_member.unwrap().1 > now {
+            if baned_member.unwrap().1 < now {
                 drop(ban_list);
                 unban(self.ban_list.clone(), new.user_id).await;
             } else {
+                println!("{}", "disconnect baned member".to_string().yellow());
                 let guild_id = new.guild_id.unwrap();
                 let builder = EditMember::new().disconnect_member();
                 guild_id

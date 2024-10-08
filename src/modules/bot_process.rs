@@ -172,15 +172,15 @@ pub async fn interaction_process(handler: &Handler, ctx: &Context, command: &Com
         }
         // Handle add_ban command (add ban)
         // 處理 add_ban 命令（添加封禁）
-        "add_ban" => {
-            let msg = commands::ban::add_ban::run(handler.ban_list.clone(), &command.data.options()).await;
+        "ban" => {
+            let msg = commands::ban::add_ban::run(ctx, command, handler.ban_list.clone(), &command.data.options()).await;
             interaction_response(ctx, command, msg, true).await;
             true
         }
         // Handle un_ban command (remove ban)
         // 處理 un_ban 命令（移除封禁）
-        "un_ban" => {
-            let msg = commands::ban::un_ban::run(handler.ban_list.clone(), &command.data.options()).await;
+        "unban" => {
+            let msg = commands::ban::un_ban::run(ctx, command, handler.ban_list.clone(), &command.data.options()).await;
             interaction_response(ctx, command, msg, true).await;
             true
         }

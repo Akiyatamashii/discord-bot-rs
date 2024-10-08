@@ -1,9 +1,9 @@
 use serenity::all::{
-    CommandOptionType, CreateCommand, CreateCommandOption, ResolvedOption, ResolvedValue, UserId,
+    CommandInteraction, CommandOptionType, Context, CreateCommand, CreateCommandOption, ResolvedOption, ResolvedValue, UserId
 };
 
 use crate::{
-    modules::{func::ensure_file_exists, reminder::TW},
+    modules::{func::{check_permission, ensure_file_exists}, reminder::TW},
     BanList,
 };
 
@@ -23,7 +23,10 @@ pub fn register() -> CreateCommand {
         )
 }
 
-pub async fn run<'a>(ban_list: BanList, options: &[ResolvedOption<'a>]) -> String {
+pub async fn run<'a>(ctx: &Context, command: &CommandInteraction, ban_list: BanList, options: &[ResolvedOption<'a>]) -> String {
+    if !check_permission(ctx, command).await {
+        return "你沒有許可權使用指令".to_string();
+    }
     let member = options.iter().find(|option| option.name == "member");
     let mins = options.iter().find(|option| option.name == "mins");
 
@@ -56,9 +59,7 @@ pub async fn run<'a>(ban_list: BanList, options: &[ResolvedOption<'a>]) -> Strin
     ban_list.push((member_id, ban_time));
 
     ensure_file_exists("assets/ban_list.json").unwrap();
-
-    let ban_list = ban_list.clone();
-    let list_json = serde_json::to_string(&ban_list).unwrap();
+    let list_json = serde_json::to_string(&*ban_list).unwrap();
     std::fs::write("assets/ban_list.json", list_json).unwrap();
 
     format!("成功將{}加入封禁名單，封禁時間為{}分鐘", member_name, mins)

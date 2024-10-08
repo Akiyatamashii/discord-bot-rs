@@ -1,8 +1,9 @@
 use serenity::all::{
-    CommandOptionType, CreateCommand, CreateCommandOption, ResolvedOption, ResolvedValue, UserId,
+    CommandInteraction, CommandOptionType, Context, CreateCommand, CreateCommandOption,
+    ResolvedOption, ResolvedValue, UserId,
 };
 
-use crate::BanList;
+use crate::{modules::func::check_permission, BanList};
 
 pub fn register() -> CreateCommand {
     CreateCommand::new("unban")
@@ -15,7 +16,15 @@ pub fn register() -> CreateCommand {
         )
 }
 
-pub async fn run<'a>(ban_list: BanList, options: &'a [ResolvedOption<'a>]) -> String {
+pub async fn run<'a>(
+    ctx: &Context,
+    command: &CommandInteraction,
+    ban_list: BanList,
+    options: &'a [ResolvedOption<'a>],
+) -> String {
+    if !check_permission(ctx, command).await {
+        return "你沒有許可權使用指令".to_string();
+    }
     let member = options.iter().find(|option| option.name == "member");
 
     let (member_id, member_name) = if let Some(get_member) = member {
@@ -27,6 +36,10 @@ pub async fn run<'a>(ban_list: BanList, options: &'a [ResolvedOption<'a>]) -> St
     } else {
         (UserId::default(), "".to_string())
     };
+
+    if command.member.clone().unwrap().user.id == member_id {
+        return "你不能解封你自己".to_string();
+    }
 
     let ban_list_value = ban_list.write().await;
     let baned_member = ban_list_value
