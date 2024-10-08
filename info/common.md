@@ -12,3 +12,10 @@
   + Ex：/update (查看最新日誌訊息)
   + Ex：/update all:true (查看所有更新日誌)
   + Ex：/update public:true (公開發送更新日誌)
+* /ban：封禁成員
+  + member_id：成員
+  + time：封禁時間 ( 單位：秒 )
+  + Ex：/ban member 10
+* /unban：解封成員
+  + member_id：成員
+  + Ex：/unban member
