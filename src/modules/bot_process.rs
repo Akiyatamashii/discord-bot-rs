@@ -3,8 +3,8 @@ use std::sync::Arc;
 use colored::Colorize;
 use serenity::all::{CommandInteraction, Context, Message};
 
-use crate::{commands, modules::func::error_output, Handler};
 use super::func::{check_permission, interaction_response, register_commands};
+use crate::{commands, modules::func::error_output, Handler};
 
 // Process prefix commands
 // 處理前綴命令的函數
@@ -173,14 +173,26 @@ pub async fn interaction_process(handler: &Handler, ctx: &Context, command: &Com
         // Handle add_ban command (add ban)
         // 處理 add_ban 命令（添加封禁）
         "ban" => {
-            let msg = commands::ban::add_ban::run(ctx, command, handler.ban_list.clone(), &command.data.options()).await;
+            let msg = commands::ban::add_ban::run(
+                ctx,
+                command,
+                Arc::clone(&handler.ban_list),
+                &command.data.options(),
+            )
+            .await;
             interaction_response(ctx, command, msg, true).await;
             true
         }
         // Handle un_ban command (remove ban)
         // 處理 un_ban 命令（移除封禁）
         "unban" => {
-            let msg = commands::ban::un_ban::run(ctx, command, handler.ban_list.clone(), &command.data.options()).await;
+            let msg = commands::ban::un_ban::run(
+                ctx,
+                command,
+                Arc::clone(&handler.ban_list),
+                &command.data.options(),
+            )
+            .await;
             interaction_response(ctx, command, msg, true).await;
             true
         }

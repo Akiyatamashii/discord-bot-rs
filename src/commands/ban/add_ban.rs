@@ -64,6 +64,7 @@ pub async fn run<'a>(
     };
 
     let mut ban_list = ban_list.write().await;
+    println!("ban_list: {:?}", ban_list);
     if ban_list.iter().any(|(id, _)| *id == member_id) {
         return format!("{}已經在封禁名單中", member_name);
     }
