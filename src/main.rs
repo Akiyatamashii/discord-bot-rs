@@ -120,11 +120,18 @@ impl EventHandler for Handler {
         }
     }
 
-    async fn voice_state_update(&self, ctx: Context, _old: Option<VoiceState>, new: VoiceState) {
+    async fn voice_state_update(&self, ctx: Context, old: Option<VoiceState>, new: VoiceState) {
         let ban_list = self.ban_list.read().await.clone();
         if ban_list.is_empty() {
             return;
         }
+
+        if let Some(old) = old {
+            if old.channel_id == new.channel_id {
+                return;
+            }
+        }
+
         let baned_member = ban_list.iter().find(|(id, _time)| *id == new.user_id);
         if baned_member.is_some() {
             let now = Utc::now().with_timezone(&*TW).time();
