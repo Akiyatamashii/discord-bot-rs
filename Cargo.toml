@@ -5,7 +5,7 @@ edition = "2021"        # Rust 版本
 
 [dependencies] # 項目依賴
 # 異步 OpenAI API 客戶端
-async-openai = "0.24.0"
+async-openai = "0.25.0"
 # 日期和時間處理
 chrono = "0.4.38"
 chrono-tz = "0.10.0"
@@ -21,7 +21,7 @@ serenity = { version = "0.12.1", features = [
     "cache",
 ] }
 # OpenAI token 計數工具
-tiktoken-rs = { version = "0.5.9", features = ["async-openai"] }
+tiktoken-rs = { version = "0.6.0", features = ["async-openai"] }
 # 異步運行時
 tokio = { version = "1.37.0", features = ["full", "rt-multi-thread"] }
 # 序列化和反序列化
@@ -30,9 +30,9 @@ serde_json = "1.0.117"
 # 終端輸出著色
 colored = "2.1.0"
 # 全局變量
-once_cell = "1.19.0"
+once_cell = "1.20.2"
 # 正則表達式
-regex = "1.10.6"
+regex = "1.11.0"
 # 隨機數生成
 rand = "0.8.5"
 rand_chacha = "0.3.1"
