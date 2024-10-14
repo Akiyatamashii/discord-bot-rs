@@ -10,6 +10,7 @@ Github: [Akiyatamashii](https://github.com/Akiyatamashii "Github")|[Discord-Bot]
 * AI 指令 ( ai ) : 與 ai 相關之功能
 * 欠債系統 ( cash ) : 欠債相關功能
 * 反 TikTok ( anti_tiktok ) : 反 TikTok 相關功能 ( 目前未開放給其他群組使用 )
+* 封禁處罰系統 ( ban ) : 封禁相關功能
 * 敬請期待更多功能
 
 ＃請使用 **/info [type]** 查詢更詳細的指令內容
