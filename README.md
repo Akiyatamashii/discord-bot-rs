@@ -40,20 +40,17 @@ This is a multi-functional Discord bot developed using the Rust programming lang
 ## Installation and Setup
 
 1. Ensure you have Rust and Cargo installed.
-2. Clone this repository:
+2. Clone this repository and navigate to the project directory:
    ```
    git clone https://github.com/Akiyatamashii/discord-bot-rs.git
-   ```
-3. Navigate to the project directory:
-   ```
    cd discord-bot-rs
    ```
-4. Create a `.env` file and add the following content:
+3. Create a `.env` file and add the following content:
    ```
    TOKEN=your_discord_bot_token // Discord bot token
    API_KEY=your_openai_api_key // OpenAI API key (optional if not needed)
    ```
-5. Compile and run the bot:
+4. Compile and run the bot:
    ```
    cargo run // Run
    ```
@@ -62,12 +59,12 @@ This is a multi-functional Discord bot developed using the Rust programming lang
    cargo build --release // Compile
    ./target/release/discord-bot // Run
    ```
-6. Add the bot to your Discord server:
+5. Add the bot to your Discord server:
    - Create a new bot in the Discord Developer Portal using your bot token.
    - Add the bot to your server.
-   - Use the `/register` command in the server to register bot commands.
-   - Use `info` to get more information about the bot.
-7. Enjoy your Discord bot!
+   - Use the `!register` command in the server to register bot commands.
+   - Use `/info` to get more information about the bot.
+6. Enjoy your Discord bot!
 
 ## Usage
 

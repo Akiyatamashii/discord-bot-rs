@@ -40,20 +40,17 @@
 ## 安裝和設置
 
 1. 確保已安裝 Rust 和 Cargo。
-2. 克隆此存儲庫：
+2. 克隆此存儲庫並進入項目目錄：
    ```
    git clone https://github.com/Akiyatamashii/discord-bot-rs.git
-   ```
-3. 進入項目目錄：
-   ```
    cd discord-bot-rs
    ```
-4. 創建 `.env` 文件並添加以下內容：
+3. 創建 `.env` 文件並添加以下內容：
    ```
    TOKEN=your_discord_bot_token // Discord 機器人令牌
    API_KEY=your_openai_api_key // OpenAI API 密鑰（如不需要可選）
    ```
-5. 編譯並運行機器人：
+4. 編譯並運行機器人：
    ```
    cargo run // 運行
    ```
@@ -62,12 +59,12 @@
    cargo build --release // 編譯
    ./target/release/discord-bot // 運行
    ```
-6. 將機器人添加到您的 Discord 伺服器：
+5. 將機器人添加到您的 Discord 伺服器：
    - 在 Discord 開發者門戶使用您的機器人令牌創建新的機器人。
    - 將機器人添加到您的伺服器。
-   - 在伺服器中使用 `/register` 命令註冊機器人命令。
-   - 使用 `info` 獲取更多關於機器人的信息。
-7. 享受您的 Discord 機器人！
+   - 在伺服器中使用 `!register` 命令註冊機器人命令。
+   - 使用 `/info` 獲取更多關於機器人的信息。
+6. 享受您的 Discord 機器人！
 
 ## 使用方法
 
