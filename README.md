@@ -25,8 +25,17 @@ This is a multi-functional Discord bot developed using the Rust programming lang
    - Delete debt records
 
 4. **Basic Commands**
+
    - View bot information
    - Test bot response time
+
+5. **Ban and Punishment System**
+
+   - Ban users
+   - Unban users
+
+6. **Anti-TikTok Feature**
+   - Automatically handle TikTok links (currently limited to specific groups)
 
 ## Installation and Setup
 
@@ -88,6 +97,11 @@ The bot supports the following slash commands:
 - `/cash add [debtor] [creditor] [debt] [ps]` - Add a debt record
 - `/cash del [index]` - Delete a specific debt record
 
+### Ban and Punishment System (Ban)
+
+- `/ban [member] [mins]` - Ban a user
+- `/unban [member]` - Unban a user
+
 For detailed command usage instructions, please refer to the corresponding markdown files in the `info/` directory.
 
 ## Development Notes
@@ -108,12 +122,7 @@ Pull requests are welcome to improve this project. For major changes, please ope
 
 ## Version
 
-Current version: 0.7.0
-
-### Changelog
-
-- 0.7.0: Added new features (please specify the new features)
-- 0.6.1: Previous version
+Current version: 0.7.7
 
 ## License
 
