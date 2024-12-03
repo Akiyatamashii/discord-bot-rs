@@ -121,6 +121,36 @@ impl EventHandler for Handler {
     }
 
     async fn voice_state_update(&self, ctx: Context, old: Option<VoiceState>, new: VoiceState) {
+        if new.channel_id.unwrap() == 1260445361932079115 && new.user_id == 495176003291840522 {
+            let mut in_channel: Option<ChannelId> = None;
+            if let Some(guild_id) = new.guild_id {
+                if let Some(guild) = ctx.cache.guild(guild_id) {
+                    if let Some(voice_state) = guild.voice_states.get(&new.user_id) {
+                        if voice_state.channel_id.is_some() {
+                            in_channel = voice_state.channel_id
+                        }
+                    }
+                }
+                if in_channel.is_none() {
+                    return;
+                }
+                if in_channel.unwrap() == 1260445361932079115 {
+                    let builder = EditMember::new().disconnect_member();
+                    if let Err(e) = guild_id.edit_member(&ctx.http, new.user_id, builder).await {
+                        println!("無法踢出成員: {:?}", e);
+                    } else {
+                        let user_id = UserId::from(293702959886368768);
+                        if let Ok(channel) = user_id.create_dm_channel(&ctx).await {
+                            if let Err(e) = channel.say(&ctx, "施泰禎被踢出語音頻道").await
+                            {
+                                println!("無法發送私人訊息: {:?}", e)
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
         let ban_list = self.ban_list.read().await.clone();
         if ban_list.is_empty() {
             return;
