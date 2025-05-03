@@ -1,4 +1,5 @@
-use std::{collections::HashMap, env, sync::Arc};
+use core::time;
+use std::{collections::HashMap, env, fmt::format, sync::Arc};
 
 use chrono::{NaiveDate, NaiveTime, Utc, Weekday};
 use colored::*;
@@ -121,61 +122,34 @@ impl EventHandler for Handler {
     }
 
     async fn voice_state_update(&self, ctx: Context, old: Option<VoiceState>, new: VoiceState) {
-        if new.channel_id.unwrap() == 1260445361932079115 && new.user_id == 495176003291840522 {
-            let mut in_channel: Option<ChannelId> = None;
-            if let Some(guild_id) = new.guild_id {
-                if let Some(guild) = ctx.cache.guild(guild_id) {
-                    if let Some(voice_state) = guild.voice_states.get(&new.user_id) {
-                        if voice_state.channel_id.is_some() {
-                            in_channel = voice_state.channel_id
-                        }
-                    }
-                }
-                if in_channel.is_none() {
-                    return;
-                }
-                if in_channel.unwrap() == 1260445361932079115 {
-                    let builder = EditMember::new().disconnect_member();
-                    if let Err(e) = guild_id.edit_member(&ctx.http, new.user_id, builder).await {
-                        println!("無法踢出成員: {:?}", e);
-                    } else {
-                        let user_id = UserId::from(293702959886368768);
-                        if let Ok(channel) = user_id.create_dm_channel(&ctx).await {
-                            if let Err(e) = channel.say(&ctx, "施泰禎被踢出語音頻道").await
-                            {
-                                println!("無法發送私人訊息: {:?}", e)
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        let ban_list = self.ban_list.read().await.clone();
-        if ban_list.is_empty() {
+        let guild_id = Some(GuildId::new(1143403544599334992));
+        if new.guild_id != guild_id {
             return;
         }
-
-        if let Some(old) = old {
-            if old.channel_id == new.channel_id {
-                return;
-            }
-        }
-
-        let baned_member = ban_list.iter().find(|(id, _time)| *id == new.user_id);
-        if baned_member.is_some() {
-            let now = Utc::now().with_timezone(&*TW).time();
-            if baned_member.unwrap().1 < now {
-                drop(ban_list);
-                unban(self.ban_list.clone(), new.user_id).await;
-            } else {
-                println!("{}", "disconnect baned member".to_string().yellow());
-                let guild_id = new.guild_id.unwrap();
-                let builder = EditMember::new().mute(true);
-                guild_id
-                    .edit_member(ctx, baned_member.unwrap().0, builder)
-                    .await
-                    .unwrap();
+        let channel = ChannelId::new(1368144725520945182);
+        let time = Utc::now().with_timezone(&*TW).format("%Y-%m-%d %H:%M:%S");
+        match old {
+            Some(old) => {
+                if old.guild_id == guild_id && old.channel_id.is_some() {
+                    if new.channel_id.is_none() {
+                        // 離開頻道
+                        let msg = format!("[{}] <@{}> 離開了 <#{}>", time, old.user_id, old.channel_id.unwrap());
+                        if let Err(err) = channel.say(&ctx, msg).await {
+                            println!("{} {} {:?}", error_output(), "Voice state update error:".red(), err);
+                        }
+                    }else {
+                        let msg = format!("[{}] <@{}> 從 <#{}> 移動到 <#{}>", time, old.user_id, old.channel_id.unwrap(), new.channel_id.unwrap());
+                        if let Err(err) = channel.say(&ctx, msg).await {
+                            println!("{} {} {:?}", error_output(), "Voice state update error:".red(), err);
+                        }
+                    }
+                }
+            },
+            None => {
+                let msg = format!("[{}] <@{}> 進入了 <#{}>", time, new.user_id, new.channel_id.unwrap());
+                if let Err(err) = channel.say(&ctx, msg).await {
+                    println!("{} {} {:?}", error_output(), "Voice state update error:".red(), err);
+                }
             }
         }
     }
@@ -222,7 +196,8 @@ async fn main() {
     let intents = GatewayIntents::GUILD_MESSAGES
         | GatewayIntents::MESSAGE_CONTENT
         | GatewayIntents::GUILDS
-        | GatewayIntents::GUILD_VOICE_STATES;
+        | GatewayIntents::GUILD_VOICE_STATES
+        | GatewayIntents::GUILD_MEMBERS;
 
     // Load reminders from file or create an empty HashMap
     // 從文件加載提醒，如果失敗則創建一個空的 HashMap
