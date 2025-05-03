@@ -1,4 +1,4 @@
-use rand::seq::SliceRandom;
+use rand::seq::IndexedRandom;
 use rand::SeedableRng;
 use rand_chacha::ChaCha12Rng;
 use serenity::all::{Context, Message};
@@ -58,7 +58,7 @@ pub async fn tiktok_refuse(
 ) {
     // Create a thread-safe random number generator
     // 建立一個執行緒安全的隨機數生成器
-    let rng = Arc::new(Mutex::new(ChaCha12Rng::from_entropy()));
+    let rng = Arc::new(Mutex::new(ChaCha12Rng::from_os_rng()));
 
     // Handle Xiaohongshu links
     // 處理小紅書鏈接
@@ -76,6 +76,8 @@ pub async fn tiktok_refuse(
             .unwrap_or(&"抖音仔閉嘴".to_string())
             .to_string();
 
-        msg.reply(ctx, &format!("# {}", selected_msg)).await.unwrap();
+        msg.reply(ctx, &format!("# {}", selected_msg))
+            .await
+            .unwrap();
     }
 }
