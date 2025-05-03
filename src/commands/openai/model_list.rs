@@ -132,7 +132,7 @@ pub async fn run<'a>(option: &'a [ResolvedOption<'a>]) -> String {
 // Determine the model type based on the model name
 // 根據模型名稱判斷模型類型
 fn get_model_type(model: &str) -> &str {
-    if model.starts_with("gpt") || model.starts_with("chatgpt") || model.starts_with("text-davinci")
+    if model.starts_with("gpt") || model.starts_with("chatgpt") || model.starts_with("text-davinci")|| (model.starts_with("o") && !model.starts_with("omni"))
     {
         "自然語言模型"
     } else if model.starts_with("dall-e") {
