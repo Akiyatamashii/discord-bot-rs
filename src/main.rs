@@ -1,14 +1,12 @@
-use core::time;
-use std::{collections::HashMap, env, fmt::format, sync::Arc};
+use std::{collections::HashMap, env, sync::Arc};
 
 use chrono::{NaiveDate, NaiveTime, Utc, Weekday};
 use colored::*;
-use commands::ban::un_ban::unban;
 use dotenvy::dotenv;
 use regex::Regex;
 use serde::{Deserialize, Serialize};
 use serenity::{
-    all::{ActivityData, ChannelId, EditMember, GuildId, Interaction, UserId, VoiceState},
+    all::{ActivityData, ChannelId, GuildId, Interaction, UserId, VoiceState},
     async_trait,
     model::{channel::Message, gateway::Ready},
     prelude::*,
@@ -133,22 +131,56 @@ impl EventHandler for Handler {
                 if old.guild_id == guild_id && old.channel_id.is_some() {
                     if new.channel_id.is_none() {
                         // 離開頻道
-                        let msg = format!("[{}] <@{}> 離開了 <#{}>", time, old.user_id, old.channel_id.unwrap());
+                        let msg = format!(
+                            "[{}] <@{}> 離開了 <#{}>",
+                            time,
+                            old.user_id,
+                            old.channel_id.unwrap()
+                        );
                         if let Err(err) = channel.say(&ctx, msg).await {
-                            println!("{} {} {:?}", error_output(), "Voice state update error:".red(), err);
+                            println!(
+                                "{} {} {:?}",
+                                error_output(),
+                                "Voice state update error:".red(),
+                                err
+                            );
                         }
-                    }else {
-                        let msg = format!("[{}] <@{}> 從 <#{}> 移動到 <#{}>", time, old.user_id, old.channel_id.unwrap(), new.channel_id.unwrap());
+                    } else {
+                        if old.channel_id == new.channel_id {
+                            return ;
+                        }
+                        let msg = format!(
+                            "[{}] <@{}> 從 <#{}> 移動到 <#{}>",
+                            time,
+                            old.user_id,
+                            old.channel_id.unwrap(),
+                            new.channel_id.unwrap()
+                        );
                         if let Err(err) = channel.say(&ctx, msg).await {
-                            println!("{} {} {:?}", error_output(), "Voice state update error:".red(), err);
+                            println!(
+                                "{} {} {:?}",
+                                error_output(),
+                                "Voice state update error:".red(),
+                                err
+                            );
                         }
                     }
                 }
-            },
+            }
             None => {
-                let msg = format!("[{}] <@{}> 進入了 <#{}>", time, new.user_id, new.channel_id.unwrap());
+                let msg = format!(
+                    "[{}] <@{}> 進入了 <#{}>",
+                    time,
+                    new.user_id,
+                    new.channel_id.unwrap()
+                );
                 if let Err(err) = channel.say(&ctx, msg).await {
-                    println!("{} {} {:?}", error_output(), "Voice state update error:".red(), err);
+                    println!(
+                        "{} {} {:?}",
+                        error_output(),
+                        "Voice state update error:".red(),
+                        err
+                    );
                 }
             }
         }
