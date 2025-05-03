@@ -6,7 +6,10 @@ use dotenvy::dotenv;
 use regex::Regex;
 use serde::{Deserialize, Serialize};
 use serenity::{
-    all::{ActivityData, ChannelId, GuildId, Interaction, UserId, VoiceState},
+    all::{
+        ActivityData, ChannelId, Colour, CreateEmbed, CreateMessage, GuildId, Interaction,
+        Timestamp, UserId, VoiceState,
+    },
     async_trait,
     model::{channel::Message, gateway::Ready},
     prelude::*,
@@ -125,19 +128,24 @@ impl EventHandler for Handler {
             return;
         }
         let channel = ChannelId::new(1368144725520945182);
-        let time = Utc::now().with_timezone(&*TW).format("%Y-%m-%d %H:%M:%S");
         match old {
             Some(old) => {
                 if old.guild_id == guild_id && old.channel_id.is_some() {
                     if new.channel_id.is_none() {
                         // 離開頻道
                         let msg = format!(
-                            "[{}] <@{}> 離開了 <#{}>",
-                            time,
+                            "<@{}> 離開了 <#{}>",
                             old.user_id,
                             old.channel_id.unwrap()
                         );
-                        if let Err(err) = channel.say(&ctx, msg).await {
+                        let embed = CreateEmbed::new()
+                            .timestamp(Timestamp::now())
+                            .field("", msg, true)
+                            .color(Colour::RED);
+                        if let Err(err) = channel
+                            .send_message(&ctx, CreateMessage::new().add_embed(embed))
+                            .await
+                        {
                             println!(
                                 "{} {} {:?}",
                                 error_output(),
@@ -147,16 +155,22 @@ impl EventHandler for Handler {
                         }
                     } else {
                         if old.channel_id == new.channel_id {
-                            return ;
+                            return;
                         }
                         let msg = format!(
-                            "[{}] <@{}> 從 <#{}> 移動到 <#{}>",
-                            time,
+                            "<@{}> 從 <#{}> 移動到 <#{}>",
                             old.user_id,
                             old.channel_id.unwrap(),
                             new.channel_id.unwrap()
                         );
-                        if let Err(err) = channel.say(&ctx, msg).await {
+                        let embed = CreateEmbed::new()
+                            .timestamp(Timestamp::now())
+                            .field("", msg, true)
+                            .color(Colour::GOLD);
+                        if let Err(err) = channel
+                            .send_message(&ctx, CreateMessage::new().add_embed(embed))
+                            .await
+                        {
                             println!(
                                 "{} {} {:?}",
                                 error_output(),
@@ -169,12 +183,19 @@ impl EventHandler for Handler {
             }
             None => {
                 let msg = format!(
-                    "[{}] <@{}> 進入了 <#{}>",
-                    time,
+                    "<@{}> 進入了 <#{}>",
                     new.user_id,
                     new.channel_id.unwrap()
                 );
-                if let Err(err) = channel.say(&ctx, msg).await {
+                let embed =
+                    CreateEmbed::new()
+                        .timestamp(Timestamp::now())
+                        .field("", msg, true)
+                        .color(Colour::DARK_GREEN);
+                if let Err(err) = channel
+                    .send_message(&ctx, CreateMessage::new().add_embed(embed))
+                    .await
+                {
                     println!(
                         "{} {} {:?}",
                         error_output(),
