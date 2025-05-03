@@ -1,6 +1,6 @@
 use std::{collections::HashMap, env, sync::Arc};
 
-use chrono::{NaiveDate, NaiveTime, Utc, Weekday};
+use chrono::{NaiveDate, NaiveTime, Weekday};
 use colored::*;
 use dotenvy::dotenv;
 use regex::Regex;
@@ -18,6 +18,7 @@ use tokio::sync::{Notify, RwLock};
 
 mod commands;
 mod modules;
+use modules::anti_tiktok::tiktok_refuse;
 use modules::func::{
     ensure_file_exists, error_output, load_reminders_from_file, register_commands_guild_ids,
     system_output,
@@ -26,7 +27,6 @@ use modules::{
     anti_tiktok::load_tiktok_refuse_msg,
     bot_process::{interaction_process, prefix_command_process},
 };
-use modules::{anti_tiktok::tiktok_refuse, reminder::TW};
 
 // Define the Reminder structure
 // 定義 Reminder 結構
@@ -133,11 +133,8 @@ impl EventHandler for Handler {
                 if old.guild_id == guild_id && old.channel_id.is_some() {
                     if new.channel_id.is_none() {
                         // 離開頻道
-                        let msg = format!(
-                            "<@{}> 離開了 <#{}>",
-                            old.user_id,
-                            old.channel_id.unwrap()
-                        );
+                        let msg =
+                            format!("<@{}> 離開了 <#{}>", old.user_id, old.channel_id.unwrap());
                         let embed = CreateEmbed::new()
                             .timestamp(Timestamp::now())
                             .field("", msg, true)
@@ -182,16 +179,11 @@ impl EventHandler for Handler {
                 }
             }
             None => {
-                let msg = format!(
-                    "<@{}> 進入了 <#{}>",
-                    new.user_id,
-                    new.channel_id.unwrap()
-                );
-                let embed =
-                    CreateEmbed::new()
-                        .timestamp(Timestamp::now())
-                        .field("", msg, true)
-                        .color(Colour::DARK_GREEN);
+                let msg = format!("<@{}> 進入了 <#{}>", new.user_id, new.channel_id.unwrap());
+                let embed = CreateEmbed::new()
+                    .timestamp(Timestamp::now())
+                    .field("", msg, true)
+                    .color(Colour::DARK_GREEN);
                 if let Err(err) = channel
                     .send_message(&ctx, CreateMessage::new().add_embed(embed))
                     .await
