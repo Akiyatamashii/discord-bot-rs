@@ -139,7 +139,7 @@ impl EventHandler for Handler {
             self.delete_message_from(&ctx, msg.author.id).await;
         }
 
-        if msg.channel_id == ChannelId::new(1470833491779256442) {
+        if msg.channel_id == ChannelId::new(1470829664527192167) {
             self.fraud_bot_list_add(msg.author.id).await;
             self.delete_message_from(&ctx, msg.author.id).await;
         }
