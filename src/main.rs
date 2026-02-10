@@ -1,4 +1,8 @@
-use std::{collections::HashMap, env, sync::Arc};
+use std::{
+    collections::{HashMap, HashSet, VecDeque},
+    env,
+    sync::Arc,
+};
 
 use chrono::{NaiveDate, NaiveTime, Weekday};
 use colored::*;
@@ -71,19 +75,69 @@ struct Handler {
     // Ban list
     // 封禁列表
     ban_list: BanList,
+
+    message_caches: Arc<RwLock<VecDeque<Message>>>,
+    fraud_bot_list: Arc<RwLock<HashSet<UserId>>>,
 }
 
-impl Handler {}
+impl Handler {
+    async fn message_cache_add(&self, msg: Message) {
+        let mut caches = self.message_caches.write().await;
+        caches.push_back(msg);
+        if caches.len() > 100 {
+            caches.pop_front();
+        }
+    }
+    async fn delete_message_from(&self, ctx: &Context, user_id: UserId) {
+        let msgs_to_delete: Vec<Message> = {
+            let caches = self.message_caches.read().await;
+            caches
+                .iter()
+                .filter(|m| m.author.id == user_id)
+                .cloned()
+                .collect()
+        };
+
+        for msg in msgs_to_delete {
+            if let Err(err) = msg.delete(&ctx.http).await {
+                println!(
+                    "{}{}{:?}",
+                    error_output(),
+                    "Delete Message Error:".red(),
+                    err
+                );
+            }
+        }
+    }
+
+    async fn fraud_bot_list_add(&self, user_id: UserId) {
+        self.fraud_bot_list.write().await.insert(user_id);
+    }
+
+    async fn is_fraud_bot(&self, user_id: &UserId) -> bool {
+        self.fraud_bot_list.read().await.contains(user_id)
+    }
+}
 
 #[async_trait]
 impl EventHandler for Handler {
     // Handle received messages
     // 處理收到的消息
     async fn message(&self, ctx: Context, msg: Message) {
+        self.message_cache_add(msg.clone()).await;
         // Ignore messages sent by bots
         // 忽略機器人發送的消息
         if msg.author.bot {
             return;
+        }
+
+        if self.is_fraud_bot(&msg.author.id).await {
+            self.delete_message_from(&ctx, msg.author.id).await;
+        }
+
+        if msg.channel_id == ChannelId::new(1470833491779256442) {
+            self.fraud_bot_list_add(msg.author.id).await;
+            self.delete_message_from(&ctx, msg.author.id).await;
         }
 
         // Check if the message matches the command prefix
@@ -96,7 +150,7 @@ impl EventHandler for Handler {
         // 在特定伺服器中處理 TikTok 消息
         if msg.guild_id == Some(GuildId::new(1143403544599334992)) {
             tiktok_refuse(&ctx, &msg, Arc::clone(&self.tiktok_refuse_msg)).await;
-        }
+        };
     }
 
     // Handle interaction commands
@@ -263,6 +317,8 @@ async fn main() {
         prefix,
         tiktok_refuse_msg: Arc::new(RwLock::new(load_tiktok_refuse_msg())),
         ban_list: Arc::new(RwLock::new(Vec::new())),
+        message_caches: Arc::new(RwLock::new(VecDeque::new())),
+        fraud_bot_list: Arc::new(RwLock::new(HashSet::new())),
     };
 
     // Create Discord client
