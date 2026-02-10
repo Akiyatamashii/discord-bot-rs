@@ -1,14 +1,14 @@
 use std::sync::Arc;
 
 use colored::Colorize;
-use serenity::all::{CommandInteraction, Context, Message};
+use serenity::all::{CommandInteraction, Context, Message, UserId};
 
 use super::func::{check_permission, interaction_response, register_commands};
 use crate::{commands, modules::func::error_output, Handler};
 
 // Process prefix commands
 // 處理前綴命令的函數
-pub async fn prefix_command_process(ctx: &Context, msg: &Message) {
+pub async fn prefix_command_process(ctx: &Context, msg: &Message, handler: &Handler) {
     let content = &msg.content;
 
     // Handle !register command
@@ -22,6 +22,37 @@ pub async fn prefix_command_process(ctx: &Context, msg: &Message) {
         // Delete the triggering message
         // 刪除觸發命令的消息
         msg.delete(&ctx.http).await.unwrap();
+    }
+
+    if content.starts_with("!fraud_list_remove") {
+        let parts: Vec<&str> = content.split_whitespace().collect();
+
+        if parts.len() < 2 {
+            // no user id provided
+            if let Err(err) = msg
+                .channel_id
+                .say(&ctx.http, "Usage: !fraud_list_remove {user_id}")
+                .await
+            {
+                println!("send usage error: {:?}", err);
+            }
+            return;
+        }
+
+        // keep only digit characters, ignore anything else
+        let digits: String = parts[1].chars().filter(|c| c.is_ascii_digit()).collect();
+
+        // if no digits at all, just ignore this command silently
+        if digits.is_empty() {
+            return;
+        }
+
+        // try parse filtered digits; if it fails, also ignore
+        if let Ok(user_id_num) = digits.parse::<u64>() {
+            println!("fraud_list_remove target user id = {}", user_id_num);
+            let user_id = UserId::new(user_id_num);
+            handler.fraud_bot_list_remove(&user_id).await;
+        }
     }
 }
 

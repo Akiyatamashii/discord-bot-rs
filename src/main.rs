@@ -24,8 +24,8 @@ mod commands;
 mod modules;
 use modules::anti_tiktok::tiktok_refuse;
 use modules::func::{
-    ensure_file_exists, error_output, load_reminders_from_file, register_commands_guild_ids,
-    system_output,
+    ensure_file_exists, error_output, is_user_admin, load_reminders_from_file,
+    register_commands_guild_ids, system_output,
 };
 use modules::{
     anti_tiktok::load_tiktok_refuse_msg,
@@ -117,6 +117,10 @@ impl Handler {
     async fn is_fraud_bot(&self, user_id: &UserId) -> bool {
         self.fraud_bot_list.read().await.contains(user_id)
     }
+
+    async fn fraud_bot_list_remove(&self, user_id: &UserId) {
+        self.fraud_bot_list.write().await.remove(user_id);
+    }
 }
 
 #[async_trait]
@@ -142,8 +146,8 @@ impl EventHandler for Handler {
 
         // Check if the message matches the command prefix
         // 檢查消息是否匹配命令前綴
-        if self.prefix.is_match(&msg.content) {
-            prefix_command_process(&ctx, &msg).await
+        if self.prefix.is_match(&msg.content) && is_user_admin(&ctx, &msg).await.unwrap() {
+            prefix_command_process(&ctx, &msg, self).await
         };
 
         // Handle TikTok messages in a specific guild

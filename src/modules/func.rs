@@ -12,7 +12,7 @@ use colored::*;
 use serenity::{
     all::{
         ChannelId, CommandInteraction, CreateInteractionResponse, CreateInteractionResponseMessage,
-        GuildId,
+        GuildId, Message,
     },
     prelude::*,
 };
@@ -87,6 +87,16 @@ pub async fn check_permission(ctx: &Context, command: &CommandInteraction) -> bo
         }
     }
     true
+}
+
+pub async fn is_user_admin(ctx: &Context, msg: &Message) -> serenity::Result<bool> {
+    let member = msg.guild_id.unwrap().member(&ctx.http, msg.author.id).await?;
+
+    if let Some(permissions) = member.permissions {
+        Ok(permissions.administrator())
+    }else {
+        Ok(false)
+    }
 }
 
 // Load reminders from file
