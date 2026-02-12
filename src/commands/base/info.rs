@@ -24,7 +24,8 @@ pub fn register() -> CreateCommand {
             .add_string_choice("reminder", "reminder")
             .add_string_choice("ai", "ai")
             .add_string_choice("cash", "cash")
-            .add_string_choice("anti_tiktok", "anti_tiktok"),
+            .add_string_choice("anti_tiktok", "anti_tiktok")
+            .add_string_choice("ban", "ban"),
         )
 }
 
