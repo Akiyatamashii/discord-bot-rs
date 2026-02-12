@@ -36,17 +36,12 @@ pub async fn run<'a>(
         if let ResolvedValue::User(user,_option ) = get_user.value {
             user.id
         }else {
-            UserId::new(0)
+            return "無法解析使用者訊息".to_string();
         }
     } else {
-        UserId::new(0)
-    } ;
-
-    if user_id == UserId::from(0) {
         return "無法解析使用者訊息".to_string();
-    }
+    } ;
     
-
     fraud_bot_list.write().await.remove(&user_id);
     
     format!("成功移除使用者 <@{}>",user_id)
