@@ -1,6 +1,6 @@
 use serenity::all::{
     CommandInteraction, CommandOptionType, Context, CreateCommand, CreateCommandOption,
-    ResolvedOption, ResolvedValue, UserId,
+    ResolvedOption, ResolvedValue,
 };
 
 use crate::{modules::func::check_permission, FraudBotList};
