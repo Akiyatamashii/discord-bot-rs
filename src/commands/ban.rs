@@ -6,6 +6,11 @@ pub mod add_ban;
 // 引入解封禁命令
 pub mod un_ban;
 
+// import remove_block module
+pub mod remove_block;
+
+pub mod display_block_list;
+
 // This module file defines the basic command structure of the bot
 // Each sub-module contains commands for specific functionalities:
 // - ban: handles commands for banning or punishing users

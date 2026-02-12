@@ -55,6 +55,8 @@ struct Reminder {
 type Reminders = Arc<RwLock<HashMap<GuildId, HashMap<ChannelId, Vec<Reminder>>>>>;
 type BanList = Arc<RwLock<Vec<(UserId, NaiveTime)>>>;
 type TiktokRefuseMsg = Arc<RwLock<Vec<String>>>;
+type MessageCaches = Arc<RwLock<VecDeque<Message>>>;
+type FraudBotList = Arc<RwLock<HashSet<UserId>>>;
 
 // Define the Handler structure
 // 定義 Handler 結構
@@ -76,8 +78,8 @@ struct Handler {
     // 封禁列表
     ban_list: BanList,
 
-    message_caches: Arc<RwLock<VecDeque<Message>>>,
-    fraud_bot_list: Arc<RwLock<HashSet<UserId>>>,
+    message_caches: MessageCaches,
+    fraud_bot_list: FraudBotList,
 }
 
 impl Handler {

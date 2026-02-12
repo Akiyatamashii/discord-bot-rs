@@ -227,6 +227,25 @@ pub async fn interaction_process(handler: &Handler, ctx: &Context, command: &Com
             interaction_response(ctx, command, msg, true).await;
             true
         }
+        "remove_block" => {
+            let msg = commands::ban::remove_block::run(
+                ctx,
+                command,
+                Arc::clone(&handler.fraud_bot_list),
+                &command.data.options(),
+            ).await;
+            interaction_response(ctx, command, msg, true).await;
+            true
+        }
+        "display_block_list" => {
+            let msg = commands::ban::display_block_list::run(
+                ctx,
+                command,
+                Arc::clone(&handler.fraud_bot_list),
+            ).await;
+            interaction_response(ctx, command, msg, true).await;
+            true
+        }
         // Handle cash command (debt system)
         // 處理 cash 命令（欠債系統）
         "cash" => {

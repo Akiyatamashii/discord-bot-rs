@@ -179,6 +179,8 @@ pub async fn register_commands(ctx: &Context, guild_id: &GuildId, for_guilds: bo
                 // 封禁相關命令
                 commands::ban::add_ban::register(),
                 commands::ban::un_ban::register(),
+                commands::ban::remove_block::register(),
+                commands::ban::display_block_list::register(),
                 // Other feature commands
                 // 其他功能命令
                 commands::cash::register(),
@@ -187,7 +189,6 @@ pub async fn register_commands(ctx: &Context, guild_id: &GuildId, for_guilds: bo
             ],
         )
         .await;
-
     match command {
         Ok(cmds) => {
             let command_names: Vec<_> = cmds.iter().map(|cmd| &cmd.name).collect();

@@ -60,10 +60,10 @@ pub async fn run<'a>(
         (UserId::default(), "".to_string())
     };
 
-    // Prevent banning a specific user (豆腐)
-    // 防止封禁特定用戶（豆腐）
+    // Prevent banning a specific user (服主)
+    // 防止封禁特定用戶（服主）
     if member_id == UserId::from(412803325768237066) {
-        return "你不能封禁豆腐".to_string();
+        return "你不能封禁服主".to_string();
     }
 
     // Extract ban duration
