@@ -195,6 +195,9 @@ impl EventHandler for Handler {
 
         let channel = ChannelId::new(1368144725520945182);
         let ban_channel = ChannelId::new(1470833491779256442);
+
+        // Kick user if they entered the ban channel
+        // 若使用者進入封禁頻道則踢出
         if new.channel_id == Some(ban_channel) {
             if let Some(member) = new.member.clone() {
                 if let Err(err) = member.disconnect_from_voice(&ctx.http).await {
@@ -210,6 +213,9 @@ impl EventHandler for Handler {
         }
         match old {
             Some(old) => {
+                if old.channel_id == Some(ban_channel) {
+                    return;
+                };
                 if old.guild_id == guild_id && old.channel_id.is_some() {
                     if new.channel_id.is_none() {
                         // 離開頻道
