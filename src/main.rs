@@ -110,6 +110,11 @@ impl Handler {
                 );
             }
         }
+
+        // Remove this user's messages from the cache
+        // 從快取中移除此使用者的訊息
+        let mut caches = self.message_caches.write().await;
+        caches.retain(|m| m.author.id != user_id);
     }
 
     async fn fraud_bot_list_add(&self, user_id: UserId) {
@@ -187,7 +192,22 @@ impl EventHandler for Handler {
         if new.guild_id != guild_id {
             return;
         }
+
         let channel = ChannelId::new(1368144725520945182);
+        let ban_channel = ChannelId::new(1470833491779256442);
+        if new.channel_id == Some(ban_channel) {
+            if let Some(member) = new.member.clone() {
+                if let Err(err) = member.disconnect_from_voice(&ctx.http).await {
+                    println!(
+                        "{} {} {:?}",
+                        error_output(),
+                        "Voice state update error:".red(),
+                        err
+                    );
+                }
+            }
+            return; // Skip move/join announcement after kicking
+        }
         match old {
             Some(old) => {
                 if old.guild_id == guild_id && old.channel_id.is_some() {
